@@ -14,9 +14,17 @@ class BscanError(Exception):
         return self._message
 
 
-class BscanInputError(Exception):
-    """Exceptions for user-provided input."""
+class BscanForceSilentExit(Exception):
+    """An exception type for ending program execution pre-maturely."""
+
+
+class BscanInternalError(Exception):
+    """An exception type for `bscan` internal errors."""
+
+
+class BscanConfigError(Exception):
+    """An exception type for configuration errors."""
 
 
 class BscanSubprocessError(Exception):
-    """Exceptions related to subprocess spawning/interaction."""
+    """An exception type related to subprocess spawning/interaction."""

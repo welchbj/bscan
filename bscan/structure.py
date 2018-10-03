@@ -2,6 +2,7 @@
 
 import os
 
+from bscan.config import get_config_value
 from bscan.io import (
     create_dir,
     path_exists,
@@ -18,7 +19,7 @@ PARENT_DIR = os.getcwd()
 
 def get_base_dir(target: str) -> str:
     """Get the path of the base directory for a scan."""
-    return os.path.join(PARENT_DIR, f'{target}.bscan')
+    return os.path.join(PARENT_DIR, f'{target}.bscan.d')
 
 
 def get_services_dir(target: str) -> str:
@@ -41,46 +42,24 @@ def get_bscan_summary_file(target: str) -> str:
     return os.path.join(get_base_dir(target), 'summary.bscan')
 
 
-def get_scan_file_smb_nmap(target: str) -> str:
-    """Get path to the SMB Nmap script scan output."""
-    return os.path.join(get_services_dir(target), 'smb.nmap')
+def get_scan_file(target: str, scan_name: str) -> str:
+    """Get path to a file for service scan output."""
+    return os.path.join(get_services_dir(target), scan_name)
 
 
-def get_scan_file_smb_enum4linx(target: str) -> str:
-    """Get path to the SMB enum4linux scan output."""
-    return os.path.join(get_services_dir(target), 'smb.enum4linux')
-
-
-def get_scan_file_http_nmap(target: str) -> str:
-    """Get path to the HTTP Nmap script scan output."""
-    return os.path.join(get_services_dir(target), 'http.nmap')
-
-
-def get_scan_file_http_nikto(target: str) -> str:
-    """Get path to the HTTP Nikto scan output."""
-    return os.path.join(get_services_dir(target), 'http.nikto')
-
-
-def get_scan_file_http_gobuster(target: str) -> str:
-    """Get path to the HTTP gobuster scan output."""
-    return os.path.join(get_services_dir(target), 'http.gobuster')
-
-
-def create_dir_skeleton(target: str, hard: bool) -> None:
+def create_dir_skeleton(target: str) -> None:
     """Create the directory skeleton for a target-based scan.
 
     Args:
         target: The singular target of the scan.
-        hard: Whether to force overwrite of an existing directory for the
-            target.
 
     """
     print_i_d1('Beginning creation of directory structure for target ', target)
 
     base_dir = get_base_dir(target)
     if path_exists(base_dir):
-        if not hard:
-            print_e_d1('Base directory ', base_dir, 'already exists; use '
+        if not get_config_value('hard'):
+            print_e_d1('Base directory ', base_dir, ' already exists; use '
                        '`--hard` option to force overwrite')
             return
 
@@ -106,4 +85,4 @@ def create_dir_skeleton(target: str, hard: bool) -> None:
     print_i_d2('Creating summary file ', bscan_summary_file)
     touch_file(bscan_summary_file)
 
-    print_i_d1('Successfully completed directory setup')
+    print_i_d1('Successfully completed directory skeleton setup')

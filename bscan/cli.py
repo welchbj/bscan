@@ -1,17 +1,21 @@
 """Command-line interface for `bscan`."""
 
+import asyncio
 import sys
 
 from argparse import (
     ArgumentParser,
     Namespace,
     RawTextHelpFormatter)
-from colorama import init as colorama_init
+from colorama import init as init_colorama
 from typing import List
 
+from bscan.config import (
+    init_config)
 from bscan.errors import (
+    BscanConfigError,
     BscanError,
-    BscanInputError,
+    BscanForceSilentExit,
     BscanSubprocessError)
 from bscan.io import (
     blue,
@@ -24,6 +28,7 @@ from bscan.io import (
 from bscan.networks import (
     is_valid_ip_host_addr,
     is_valid_ip_net_addr)
+from bscan.scans import scan_target
 from bscan.structure import create_dir_skeleton
 from bscan.version import __version__
 
@@ -48,10 +53,25 @@ def get_parsed_args(args: List[str]=None) -> Namespace:
         formatter_class=RawTextHelpFormatter)
 
     parser.add_argument(
+        '--brute-pass-list',
+        action='store',
+        help='password list to use for brute-forcing')
+
+    parser.add_argument(
+        '--brute-user-list',
+        action='store',
+        help='user list to use for brute-forcing')
+
+    parser.add_argument(
         '--hard',
         action='store_true',
         default=False,
         help='force overwrite of existing directories')
+
+    parser.add_argument(
+        '--output-dir',
+        action='store',
+        help='the base directory in which to write output files')
 
     parser.add_argument(
         '--patterns',
@@ -63,7 +83,7 @@ def get_parsed_args(args: List[str]=None) -> Namespace:
     parser.add_argument(
         '--ping-sweep',
         action='store_true',
-        help='whether to filter hosts from a network via a ping sweep before '
+        help='whether to filter hosts from a network via a ping sweep before\n'
              'more intensive scans')
 
     parser.add_argument(
@@ -98,25 +118,22 @@ def get_parsed_args(args: List[str]=None) -> Namespace:
     return parser.parse_args(args)
 
 
-def main(args: List[str]=None) -> int:
+async def main(args: List[str]=None) -> int:
     """Main entry point for `bscan`'s command-line interface.
 
     Args:
         args: Custom arguments to override ``sys.argv``.
 
     Returns:
-        The exit code of the program
+        The exit code of the program.
 
     """
     try:
-        colorama_init()
+        init_colorama()
         opts = get_parsed_args(args)
-        if opts.quick_scan not in ('unicornscan', 'nmap',):
-            print_e_d1('`--quick-scan` must be either `unicornscan` or `nmap`')
-        elif opts.quick_scan != 'unicornscan':
-            print_e_d1('The only currently supported `--quick-scan` option is '
-                       '`--unicornscan`')
+        await init_config(opts)
 
+        # TODO: check output directory exists
         # TODO: handle patterns
         # TODO: validate web word list
         # TODO: implement ping sweep for networks
@@ -128,7 +145,10 @@ def main(args: List[str]=None) -> int:
             print_e_d1('No targets specified; use `--help` to figure out what '
                        'you\'re doing')
 
-        for target in opts.targets:
+        # TODO: create a full list of targets from network address and
+        #       --ping-sweep filtering
+        targets = opts.targets
+        for target in targets:
             if is_valid_ip_host_addr(target):
                 pass
             elif is_valid_ip_net_addr(target):
@@ -136,15 +156,24 @@ def main(args: List[str]=None) -> int:
                            'skipping network: ', target)
                 continue
             else:
+                # TODO: handle host names
                 print_e_d1('Unable to parse target ', target, ', skipping it')
                 continue
 
-            create_dir_skeleton(target, opts.hard)
+            create_dir_skeleton(target)
+
+        print_i_d1('Kicking off scans of ', len(targets), ' targets')
+        await asyncio.gather(*[scan_target(target) for target in targets])
+
+        print_i_d1('Completed execution')
         return 0
-    except BscanInputError as e:
-        # TODO
+    except BscanConfigError as e:
+        print_e_d1('Error in configuration; exiting now')
         return 1
     except BscanSubprocessError as e:
+        # TODO
+        return 1
+    except BscanForceSilentExit as e:
         # TODO
         return 1
     except BscanError as e:

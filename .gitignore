@@ -1,11 +1,10 @@
 __pycache__
 *.py[cod]
 *.egg
+*.bscan.d
 
 .tox
 .vscode
 build
 dist
-docs/_build
-ttable.egg-info
 todo.txt

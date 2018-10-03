@@ -2,37 +2,42 @@
 title = "Default services to scan"
 
 [ftp]
-  ["ftp.nmap"]
-  TODO
-
-[http]
-  service-names = [
+  nmap-service-names = [
     TODO
   ]
 
+  ["ftp.nmap"]
+    cmd = "TODO"
+
+[http]
+  nmap-service-names = [
+    "http",
+    "http-alt"
+  ]
+
   ["http.nmap"]
-    TODO
+    cmd = "TODO"
 
   ["http.nikto"]
-    TODO
+    cmd = "TODO"
 
   ["http.gobuster"]
-    TODO
+    cmd = "TODO"
 
   recommendations = [
     TODO
   ]
 
 [smb]
-  service-names = [
+  nmap-service-names = [
     TODO
   ]
 
   ["smb.nmap"]
-    TODO
+    cmd = "TODO"
 
   ["smb.enum4linux"]
-    TODO
+    cmd = "TODO"
 
   recommendations = [
     TODO

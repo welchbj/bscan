@@ -57,7 +57,7 @@ def file_exists(path: str) -> bool:
 
 def remove_dir(path: str) -> None:
     """Remove a directory tree, failing silently if ``path`` does not exist."""
-    shutil.rmdir(path, ignore_errors=True)
+    shutil.rmtree(path, ignore_errors=True)
 
 
 def create_dir(path: str) -> None:
