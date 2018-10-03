@@ -1,0 +1,39 @@
+# see: https://packetstormsecurity.com/files/18307/nmap-services.html
+title = "Default services to scan"
+
+[ftp]
+  ["ftp.nmap"]
+  TODO
+
+[http]
+  service-names = [
+    TODO
+  ]
+
+  ["http.nmap"]
+    TODO
+
+  ["http.nikto"]
+    TODO
+
+  ["http.gobuster"]
+    TODO
+
+  recommendations = [
+    TODO
+  ]
+
+[smb]
+  service-names = [
+    TODO
+  ]
+
+  ["smb.nmap"]
+    TODO
+
+  ["smb.enum4linux"]
+    TODO
+
+  recommendations = [
+    TODO
+  ]

@@ -1,0 +1,11 @@
+__pycache__
+*.py[cod]
+*.egg
+
+.tox
+.vscode
+build
+dist
+docs/_build
+ttable.egg-info
+todo.txt
