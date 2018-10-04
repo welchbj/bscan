@@ -99,7 +99,7 @@ def get_parsed_args(args: List[str]=None) -> Namespace:
         action='store_true',
         default=False,
         help='whether to only run the quick scan (and not include the\n'
-             'thorough scan over all ports')
+             'thorough scan over all ports)')
 
     parser.add_argument(
         '--quick-scan',
