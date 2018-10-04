@@ -46,4 +46,4 @@
 
   [smb.scans]
     "nmap.tcp" = "nmap -vv -Pn -p <ports> --script smb-vuln* <target> -oN <fout>"
-    enum4linux = "enum4linux -a <target>"
+    enum4linux = "enum4linux -a <target> 2>&1 | tee <fout>"
