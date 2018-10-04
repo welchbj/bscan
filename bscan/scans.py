@@ -21,20 +21,20 @@ from bscan.structure import get_scan_file
 DetectedService = namedtuple('DetectedService', ['name', 'port'])
 """Encapsulate the data associated with a detected service."""
 
-UNIC_QUICK_SCAN = ('type .\\samples\\unicornscan.quick.sample')
-    # 'unicornscan {target} 2>&1 | tee "{fout}"')
+UNIC_QUICK_SCAN = (
+    'unicornscan {target} 2>&1 | tee "{fout}"')
 """TCP connect() and SYN scans on most common ports."""
 
-NMAP_QUICK_SCAN = ('type .\\samples\\nmap.quick.sample')
-    # 'nmap -vv -Pn -sC -sV --top-ports 1000 {target} -oN "{fout}" 2>&1')
+NMAP_QUICK_SCAN = (
+    'nmap -vv -Pn -sC -sV --top-ports 1000 {target} -oN "{fout}" 2>&1')
 """TCP connect() scan and service discovery on most common ports."""
 
-NMAP_TCP_SCAN = ('type .\\samples\\nmap.thorough.tcp.sample')
-    # 'nmap -vv -Pn -sS -sC -A -p- -T4 {target} -oN "{fout}" 2>&1')
+NMAP_TCP_SCAN = (
+    'nmap -vv -Pn -sS -sC -A -p- -T4 {target} -oN "{fout}" 2>&1')
 """TCP SYN and connect() scans (aggressively) on all TCP ports."""
 
-NMAP_UDP_SCAN = ('type .\\samples\\nmap.thorough.udp.sample')
-    # 'nmap -vv -Pn -sC -sV sU {target} -oN "{fout}" 2>&1')
+NMAP_UDP_SCAN = (
+    'nmap -vv -Pn -sC -sV sU {target} -oN "{fout}" 2>&1')
 """UDP scan."""
 
 
