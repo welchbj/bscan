@@ -1,6 +1,8 @@
 """Asynchronous-access global application configuration."""
 
+import re
 import os
+import toml
 
 from argparse import Namespace
 from asyncio import Lock
@@ -9,68 +11,94 @@ from bscan.errors import (
     BscanConfigError,
     BscanInternalError)
 from bscan.io import (
-    print_i_d1,
-    print_w_d2)
+    dir_exists,
+    file_exists)
 
+
+THIS_DIR = os.path.dirname(os.path.realpath(__file__))
+BSCAN_BASE_DIR = os.path.dirname(THIS_DIR)
+CONFIGURATION_DIR = os.path.join(BSCAN_BASE_DIR, 'configuration')
+PATTERNS_FILE = os.path.join(CONFIGURATION_DIR, 'patterns.txt')
+SERVICES_FILE = os.path.join(CONFIGURATION_DIR, 'services.toml')
 
 config = dict()
 lock = Lock()
 
 
 async def init_config(ns: Namespace) -> None:
-    """Initialize the configuration from parsed command-line arguments."""
+    """Init configuration from default files and command-line arguments."""
     async with lock:
-        print_i_d1('Initializing configuration from command-line arguments')
         if ns.brute_pass_list is None:
             config['brute-pass-list'] = '/usr/share/wordlists/fasttrack.txt'
         else:
             config['brute-pass-list'] = ns.brute_pass_list
-        # TODO: validate existence of file
+        if not ns.no_fcheck and not file_exists(config['brute-pass-list']):
+            raise BscanConfigError(
+                '`--brute-pass-list` file ' + config['brute-pass-list'] +
+                ' does not exist')
 
         if ns.brute_user_list is None:
             config['brute-user-list'] = (
                 '/usr/share/wordlists/metasploit/namelist.txt')
         else:
             config['brute-user-list'] = ns.brute_user_list
-        # TODO: validate existence of file
+        if not ns.no_fcheck and not file_exists(config['brute-user-list']):
+            raise BscanConfigError(
+                '`--brute-user-list` file ' + config['brute-user-list'] +
+                ' does not exist')
 
         if ns.output_dir is None:
             config['output-dir'] = os.getcwd()
         else:
             config['output-dir'] = ns.output_dir
-        # TODO: validate existence of file
+        if not dir_exists(config['output-dir']):
+            raise BscanConfigError(
+                '`--output-dir` directory ' + config['output-dir'] +
+                ' does not exist')
 
-        if ns.patterns is None:
-            # TODO: implement this
-            pass
-        else:
-            print_w_d2('--patterns functionality not yet implemented, '
-                       'ignoring it')
-        # TODO: validate pattern syntax
+        patterns = []
+        with open(PATTERNS_FILE, 'r') as f:
+            for line in f:
+                patterns.append(line.rstrip('\n'))
+        if ns.patterns is not None:
+            if not ns.patterns:
+                raise BscanConfigError(
+                    '`--patterns` requires at least one regex pattern')
+            else:
+                patterns.extend(ns.patterns)
+        config['patterns'] = re.compile('|'.join(patterns))
 
         if ns.quick_scan is None or ns.quick_scan == 'unicornscan':
             config['quick-scan'] = 'unicornscan'
         elif ns.quick_scan == 'nmap':
-            print_w_d2('Nmap quick scan not yet implemented, overriding to '
-                       'unicornscan')
-            config['quick-scan'] = 'unicornscan'
+            raise BscanConfigError(
+                'Nmap quick scan not yet implemented, use `unicornscan`')
         else:
-            print_w_d2('Unrecognized --quick-scan option; must be either '
-                       '`unicornscan` or `nmap`')
-            raise BscanConfigError('Invalid --quick-scan option')
-        # TODO: support for specify a file as the input source
+            raise BscanConfigError(
+                'Invalid --quick-scan option; must be either '
+                '`unicornscan` or `nmap`')
+
+        with open(SERVICES_FILE, 'r') as f:
+            config['services'] = toml.loads(f.read())
 
         if ns.web_word_list is None:
             config['web-word-list'] = '/usr/share/dirb/wordlists/big.txt'
         else:
             config['web-word-list'] = ns.web_word_list
-        # TODO: validate existence of file
+        if not ns.no_fcheck and not file_exists(config['web-word-list']):
+            raise BscanConfigError(
+                '`--web-word-list` file ' + config['web-word-list'] +
+                ' does not exist')
 
+        config['quick-only'] = ns.quick_only
         config['hard'] = ns.hard
 
         if ns.ping_sweep:
-            print_w_d2('--ping-sweep option not yet implement, disabling it')
-        config['ping-sweep'] = False
+            raise BscanConfigError(
+                '`--ping-sweep` option not yet implemented')
+        config['ping-sweep'] = ns.ping_sweep
+
+        config['udp'] = ns.udp
 
 
 async def write_config_value(key: str, val: object) -> None:

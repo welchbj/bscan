@@ -1,0 +1,49 @@
+# see: https://packetstormsecurity.com/files/18307/nmap-services.html
+# TODO: dns, mysql, ms-sql/ms-sql-s, telnet, msrdp/ms-wbt-server, smtp, snmp,
+#       ssh, msrpc, pop3, ipp, java-rmi, vnc/vnc-http, oracle-tns,
+#       kerberos-sec, ldap, imap/imap3/imaps, https, ssl/http, ssl/http-alt
+# commands accept arguments: <port>/<ports>, <target>, <fout>,
+#                            <wordlist>, <userlist>, <passlist>
+[ftp]
+  nmap-service-names = [
+    "ftp"
+  ]
+
+  recommendations = [
+    # TODO
+  ]
+
+  [ftp.scans]
+    nmap = "nmap -vv -Pn -p <ports> --script=ftp-anon,ftp-bounce,ftp-libopie,ftp-proftpd-backdoor,ftp-syst,ftp-vsftpd-backdoor,ftp-vuln-cve2010-4221 <target> -oN <fout>"
+
+
+[http]
+  nmap-service-names = [
+    "http",
+    "http-alt"
+  ]
+
+  recommendations = [
+    # TODO
+  ]
+
+  [http.scans]
+    nikto = "nikto -host <target> -port <ports> 2>&1 | tee <fout>"
+    nmap = "nmap -vv -Pn -p <ports> --script=http-vuln* <target> -oN <fout>"
+    gobuster = "gobuster -e -w <wordlist> -u http://<target>:<port>/ 2>&1 | tee <fout>"
+
+
+[smb]
+  nmap-service-names = [
+    "epmap",
+    "microsoft-ds",
+    "netbios-ssn"
+  ]
+
+  recommendations = [
+    # TODO
+  ]
+
+  [smb.scans]
+    "nmap.tcp" = "nmap -vv -Pn -p <ports> --script smb-vuln* <target> -oN <fout>"
+    enum4linux = "enum4linux -a <target>"

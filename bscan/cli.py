@@ -15,6 +15,7 @@ from bscan.config import (
 from bscan.errors import (
     BscanConfigError,
     BscanError,
+    BscanForceSkipTarget,
     BscanForceSilentExit,
     BscanSubprocessError)
 from bscan.io import (
@@ -69,6 +70,13 @@ def get_parsed_args(args: List[str]=None) -> Namespace:
         help='force overwrite of existing directories')
 
     parser.add_argument(
+        '--no-fcheck',
+        action='store_true',
+        default=False,
+        help='disable checking the presence of files such as configured\n'
+             'wordlists')
+
+    parser.add_argument(
         '--output-dir',
         action='store',
         help='the base directory in which to write output files')
@@ -87,12 +95,25 @@ def get_parsed_args(args: List[str]=None) -> Namespace:
              'more intensive scans')
 
     parser.add_argument(
+        '--quick-only',
+        action='store_true',
+        default=False,
+        help='whether to only run the quick scan (and not include the\n'
+             'thorough scan over all ports')
+
+    parser.add_argument(
         '--quick-scan',
         action='store',
         default='unicornscan',
         metavar='METHOD',
         help='the method for peforming the initial port scan:\n'
              '`unicornscan` or `nmap`')
+
+    parser.add_argument(
+        '--udp',
+        action='store_true',
+        default=False,
+        help='whether to run UDP scans')
 
     parser.add_argument(
         '--version',
@@ -131,6 +152,7 @@ async def main(args: List[str]=None) -> int:
     try:
         init_colorama()
         opts = get_parsed_args(args)
+        print_i_d1('Initializing configuration from command-line arguments')
         await init_config(opts)
 
         # TODO: check output directory exists
@@ -144,31 +166,44 @@ async def main(args: List[str]=None) -> int:
         if not opts.targets:
             print_e_d1('No targets specified; use `--help` to figure out what '
                        'you\'re doing')
+            return 1
 
         # TODO: create a full list of targets from network address and
         #       --ping-sweep filtering
-        targets = opts.targets
-        for target in targets:
-            if is_valid_ip_host_addr(target):
+        targets = []
+        for candidate in opts.targets:
+            if is_valid_ip_host_addr(candidate):
                 pass
-            elif is_valid_ip_net_addr(target):
+            elif is_valid_ip_net_addr(candidate):
                 print_w_d1('Network scanning not yet supported; '
-                           'skipping network: ', target)
+                           'skipping network: ', candidate)
                 continue
             else:
                 # TODO: handle host names
-                print_e_d1('Unable to parse target ', target, ', skipping it')
+                print_e_d1('Unable to parse target ', candidate,
+                           ', skipping it')
                 continue
 
-            create_dir_skeleton(target)
+            try:
+                create_dir_skeleton(candidate)
+            except BscanForceSkipTarget as e:
+                print_e_d1(e.message)
+                print_e_d1(candidate, ': skipping this target')
+                continue
 
-        print_i_d1('Kicking off scans of ', len(targets), ' targets')
-        await asyncio.gather(*[scan_target(target) for target in targets])
+            targets.append(candidate)
+
+        if targets:
+            print_i_d1('Kicking off scans of ', len(targets), ' targets')
+            await asyncio.gather(*[scan_target(target) for target in targets])
+        else:
+            print_e_d1('No valid targets specified')
+            return 1
 
         print_i_d1('Completed execution')
         return 0
     except BscanConfigError as e:
-        print_e_d1('Error in configuration; exiting now')
+        print_e_d1('Configuration error: ', e.message)
         return 1
     except BscanSubprocessError as e:
         # TODO

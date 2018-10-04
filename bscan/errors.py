@@ -14,17 +14,21 @@ class BscanError(Exception):
         return self._message
 
 
-class BscanForceSilentExit(Exception):
+class BscanForceSkipTarget(BscanError):
+    """An exception type for forcing a target to be skipped."""
+
+
+class BscanForceSilentExit(BscanError):
     """An exception type for ending program execution pre-maturely."""
 
 
-class BscanInternalError(Exception):
+class BscanInternalError(BscanError):
     """An exception type for `bscan` internal errors."""
 
 
-class BscanConfigError(Exception):
+class BscanConfigError(BscanError):
     """An exception type for configuration errors."""
 
 
-class BscanSubprocessError(Exception):
+class BscanSubprocessError(BscanError):
     """An exception type related to subprocess spawning/interaction."""

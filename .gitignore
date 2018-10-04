@@ -1,4 +1,5 @@
 __pycache__
+samples/
 *.py[cod]
 *.egg
 *.bscan.d
