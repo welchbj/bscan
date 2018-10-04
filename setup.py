@@ -8,7 +8,7 @@ from setuptools import (
     setup)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-README_FILE = os.path.join(HERE, 'README.rst')
+README_FILE = os.path.join(HERE, 'README.md')
 REQS_FILE = os.path.join(HERE, 'requirements.txt')
 BSCAN_DIR = os.path.join(HERE, 'bscan')
 VERSION_FILE = os.path.join(BSCAN_DIR, 'version.py')

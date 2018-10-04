@@ -1,4 +1,4 @@
 include LICENSE.txt
-include README.rst
+include README.md
 
 global-exclude *.py[cod]
