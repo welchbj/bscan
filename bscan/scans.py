@@ -4,6 +4,7 @@ import asyncio
 import re
 
 from collections import namedtuple
+from functools import partial
 from typing import (
     Generator,
     List,
@@ -16,7 +17,9 @@ from bscan.io import (
     print_i_d3,
     print_w_d3,
     purple)
-from bscan.structure import get_scan_file
+from bscan.structure import (
+    get_recommendations_txt_file,
+    get_scan_file)
 
 DetectedService = namedtuple('DetectedService', ['name', 'port'])
 """Encapsulate the data associated with a detected service."""
@@ -76,6 +79,9 @@ async def scan_target(target: str) -> None:
     # report on scanned/unscanned ports
     # TODO
 
+    # write recommendations file for further manual commands
+    # TODO
+
     pass
 
 
@@ -99,9 +105,9 @@ async def run_unicornscan_qs(target: str) -> Set[DetectedService]:
     async for line in proc_spawn(target, unic_cmd):
         match_patterns(target, line)
         if line.startswith('TCP open'):
-            tokens = line.split()
-            name = tokens[2][:-1]
-            port = int(tokens[3][:-1])
+            tokens = line.replace('[', ' ').replace(']', ' ').split()
+            name = tokens[2]
+            port = int(tokens[3])
             services.add(DetectedService(name, port))
 
     print_i_d2(target, ': finished unicornscan quick scan')
@@ -181,13 +187,11 @@ def build_scans(target: str,
             print_i_d3(target, ': matched services on port(s) ',
                        blue(ports_str), ' to ', blue(protocol), ' protocol')
 
+            # create scan commands
             for key, cmd in config['scans'].items():
                 fout = get_scan_file(target, protocol + '.' + key)
-                cmd = (cmd.replace('<target>', target)
-                          .replace('<fout>', fout)
-                          .replace('<wordlist>', wordlist)
-                          .replace('<userlist>', userlist)
-                          .replace('<passlist>', passlist))
+                cmd = template_replace(
+                    cmd, target, fout, wordlist, userlist, passlist)
                 if '<ports>' in cmd:
                     cmds.append(cmd.replace('<ports>', ports_str))
                 elif '<port>' in cmd:
@@ -196,7 +200,39 @@ def build_scans(target: str,
                 else:
                     cmds.append(cmd)
 
+            # write to recommendations file
+            with open(get_recommendations_txt_file(target), 'a') as f:
+                fprint = partial(print, sep='', file=f)
+                recs = config['recommendations']
+                if recs:
+                    fprint('Recommendations for protocol `', protocol,
+                           '` on ports ', ports_str, ':')
+                    for cmd in recs:
+                        cmd = template_replace(
+                            cmd, target, fout, wordlist, userlist, passlist)
+                        if '<ports>' in cmd:
+                            fprint(cmd.replace('<ports>', ports_str))
+                        elif '<port>' in cmd:
+                            for port in port_ints:
+                                fprint(cmd.replace('<port>', str(port)))
+                        else:
+                            fprint(cmd)
+                    fprint()
+
+            print_i_d2(target, ': finished configuring scans and '
+                       'recommendations for protocol `', protocol, '`')
+
     return cmds
+
+
+def template_replace(cmd_template: str, target: str, fout: str, wordlist: str,
+                     userlist: str, passlist: str):
+    """Replace values in a command template."""
+    return (cmd_template.replace('<target>', target)
+                        .replace('<fout>', fout)
+                        .replace('<wordlist>', wordlist)
+                        .replace('<userlist>', userlist)
+                        .replace('<passlist>', passlist))
 
 
 def match_patterns(target: str, line: str) -> None:
@@ -215,3 +251,4 @@ def match_patterns(target: str, line: str) -> None:
         highlighted_line += line[pos:]
         print_i_d3(
             target, ': matched pattern in line `', highlighted_line, '`')
+

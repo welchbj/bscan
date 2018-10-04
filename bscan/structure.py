@@ -25,6 +25,11 @@ def get_notes_txt_file(target: str) -> str:
     return os.path.join(get_base_dir(target), 'notes.txt')
 
 
+def get_recommendations_txt_file(target: str) -> str:
+    """Get the path to the recommendations.txt file."""
+    return os.path.join(get_base_dir(target), 'recommendations.txt')
+
+
 def get_services_dir(target: str) -> str:
     """Get the path of the services directory for a scan."""
     return os.path.join(get_base_dir(target), 'services')
@@ -84,6 +89,9 @@ def create_dir_skeleton(target: str) -> None:
     notes_file = get_notes_txt_file(target)
     print_i_d2('Creating notes.txt file at ', notes_file)
     touch_file(notes_file)
+    recommendations_file = get_recommendations_txt_file(target)
+    print_i_d2('Creating recommendations.txt file at ', recommendations_file)
+    touch_file(recommendations_file)
 
     loot_dir = get_loot_dir(target)
     print_i_d2('Creating loot directory at ', loot_dir)
