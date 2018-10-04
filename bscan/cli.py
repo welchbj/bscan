@@ -27,6 +27,7 @@ from bscan.io import (
     red,
     yellow)
 from bscan.networks import (
+    is_valid_hostname,
     is_valid_ip_host_addr,
     is_valid_ip_net_addr)
 from bscan.scans import scan_target
@@ -173,6 +174,8 @@ async def main(args: List[str]=None) -> int:
         targets = []
         for candidate in opts.targets:
             if is_valid_ip_host_addr(candidate):
+                pass
+            elif is_valid_hostname(candidate):
                 pass
             elif is_valid_ip_net_addr(candidate):
                 print_w_d1('Network scanning not yet supported; '
