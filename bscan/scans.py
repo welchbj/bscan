@@ -173,6 +173,11 @@ def build_scans(target: str,
     """Build scan commands from the detected services and services config."""
     cmds = []
 
+    # TODO: refactor our protocol structure into a separate class with its
+    #       own functions such as templating filling; we need to maintain an
+    #       efficient way of hashing these to be able to efficiently organize
+    #       them by and diff them between quick and thorough scans
+
     # this implementation is wildly inefficient
     wordlist = get_config_value('web-word-list')
     userlist = get_config_value('brute-user-list')
