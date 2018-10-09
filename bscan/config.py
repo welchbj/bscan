@@ -32,7 +32,7 @@ async def init_config(ns: Namespace) -> None:
             config['brute-pass-list'] = '/usr/share/wordlists/fasttrack.txt'
         else:
             config['brute-pass-list'] = ns.brute_pass_list
-        if not ns.no_fcheck and not file_exists(config['brute-pass-list']):
+        if not ns.no_file_check and not file_exists(config['brute-pass-list']):
             raise BscanConfigError(
                 '`--brute-pass-list` file ' + config['brute-pass-list'] +
                 ' does not exist')
@@ -42,7 +42,7 @@ async def init_config(ns: Namespace) -> None:
                 '/usr/share/wordlists/metasploit/namelist.txt')
         else:
             config['brute-user-list'] = ns.brute_user_list
-        if not ns.no_fcheck and not file_exists(config['brute-user-list']):
+        if not ns.no_file_check and not file_exists(config['brute-user-list']):
             raise BscanConfigError(
                 '`--brute-user-list` file ' + config['brute-user-list'] +
                 ' does not exist')
@@ -85,7 +85,7 @@ async def init_config(ns: Namespace) -> None:
             config['web-word-list'] = '/usr/share/dirb/wordlists/big.txt'
         else:
             config['web-word-list'] = ns.web_word_list
-        if not ns.no_fcheck and not file_exists(config['web-word-list']):
+        if not ns.no_file_check and not file_exists(config['web-word-list']):
             raise BscanConfigError(
                 '`--web-word-list` file ' + config['web-word-list'] +
                 ' does not exist')
