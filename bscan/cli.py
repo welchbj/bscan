@@ -71,7 +71,7 @@ def get_parsed_args(args: List[str]=None) -> Namespace:
         help='force overwrite of existing directories')
 
     parser.add_argument(
-        '--no-fcheck',
+        '--no-file-check',
         action='store_true',
         default=False,
         help='disable checking the presence of files such as configured\n'
