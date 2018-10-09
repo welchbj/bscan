@@ -2,6 +2,7 @@
 
 import re
 import os
+import shutil
 import toml
 
 from argparse import Namespace
@@ -22,6 +23,7 @@ THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 BSCAN_BASE_DIR = os.path.dirname(THIS_DIR)
 CONFIGURATION_DIR = os.path.join(BSCAN_BASE_DIR, 'configuration')
 PATTERNS_FILE = os.path.join(CONFIGURATION_DIR, 'patterns.txt')
+REQUIRED_PROGS_FILE = os.path.join(CONFIGURATION_DIR, 'required-programs.txt')
 SERVICES_FILE = os.path.join(CONFIGURATION_DIR, 'services.toml')
 
 config: Dict[str, Any] = dict()
@@ -70,6 +72,19 @@ async def init_config(ns: Namespace) -> None:
             else:
                 patterns.extend(ns.patterns)
         config['patterns'] = re.compile('|'.join(patterns))
+
+        if not ns.no_program_check:
+            not_found_progs = []
+            with open(REQUIRED_PROGS_FILE, 'r') as f:
+                for line in f:
+                    prog = line.rstrip('\n')
+                    if shutil.which(prog) is None:
+                        not_found_progs.append(prog)
+
+            if not_found_progs:
+                raise BscanConfigError(
+                    'required programs ' + ', '.join(not_found_progs) +
+                    ' could not be found on this system')
 
         if ns.quick_scan is None or ns.quick_scan == 'unicornscan':
             config['quick-scan'] = 'unicornscan'
