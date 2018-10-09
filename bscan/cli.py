@@ -156,11 +156,6 @@ async def main(args: List[str]=None) -> int:
         print_i_d1('Initializing configuration from command-line arguments')
         await init_config(opts)
 
-        # TODO: check output directory exists
-        # TODO: handle patterns
-        # TODO: validate web word list
-        # TODO: implement ping sweep for networks
-
         print_i_d1('Colors: ', blue('info'), ', ', yellow('warnings'), ', ',
                    red('errors'), ', and ', purple('pattern matches'), sep='')
 
@@ -182,7 +177,6 @@ async def main(args: List[str]=None) -> int:
                            'skipping network: ', candidate)
                 continue
             else:
-                # TODO: handle host names
                 print_e_d1('Unable to parse target ', candidate,
                            ', skipping it')
                 continue
@@ -209,13 +203,12 @@ async def main(args: List[str]=None) -> int:
         print_e_d1('Configuration error: ', e.message)
         return 1
     except BscanSubprocessError as e:
-        # TODO
+        print_e_d1('Error handling subprocess: ', e.message)
         return 1
     except BscanForceSilentExit as e:
-        # TODO
         return 1
     except BscanError as e:
-        # TODO
+        print_e_d1('This should not be reached!')
         return 1
     except Exception as e:
         print_e_d1('Received unexpected exception; re-raising it.',

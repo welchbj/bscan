@@ -2,8 +2,12 @@
 # TODO: msrdp/ms-wbt-server, snmp,  msrpc, ipp, java-rmi,
 #       vnc/vnc-http, oracle-tns, kerberos-sec, ldap,
 #       imap/imap3/imaps, https, ssl/http, ssl/http-alt
-# commands accept arguments: <port>/<ports>, <target>, <fout>,
+# Commands accept arguments: <port>/<ports>, <target>, <fout>,
 #                            <wordlist>, <userlist>, <passlist>
+# If <port> is used instead of <ports>, then a separate entry for each
+# matching applicable port will be generated for scans/recommendations;
+# otherwise, <ports> will join all applicable ports with ',' and pass the
+# build string as "one" argument.
 
 [ftp]  # 20, 21
   nmap-service-names = [
@@ -105,7 +109,7 @@
 
 [smb]  # 135, 139, 445
   nmap-service-names = [
-    "epmap",
+    "epmap",  # TODO: this might make more sense with MS-RPC
     "microsoft-ds",
     "netbios-ssn"
   ]
@@ -131,8 +135,8 @@
   ]
 
   recommendations = [
-    "nmap -vv -Pn -p <port> --script=ms-sql-dump-hashes --script-args='mssql.username=<user>,mssql.password=<pass>,mssql.instance-port=<port>' <target>",
-    "nmap -vv -Pn -p <port> --script ms-sql-xp-cmdshell --script-args='mssql.username=sa,mssql.password=password,mssql.instance-port=<port>,ms-sql-xp-cmdshell.cmd=\"<cmd>\"' <target>"
+    "nmap -vv -Pn -p <port> --script=ms-sql-dump-hashes --script-args='mssql.username=<user>,mssql.password=<password>,mssql.instance-port=<port>' <target>",
+    "nmap -vv -Pn -p <port> --script ms-sql-xp-cmdshell --script-args='mssql.username=<user>,mssql.password=<password>,mssql.instance-port=<port>,ms-sql-xp-cmdshell.cmd=\"<cmd>\"' <target>"
   ]
 
   [mssql.scans]
