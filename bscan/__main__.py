@@ -4,12 +4,14 @@ import asyncio
 import contextlib
 import sys
 
+from asyncio import ProactorEventLoop
+
 from bscan.cli import main
 
 
 if __name__ == '__main__':
     if 'win' in sys.platform:
-        loop = asyncio.ProactorEventLoop()
+        loop = ProactorEventLoop()
         asyncio.set_event_loop(loop)
     else:
         loop = asyncio.get_event_loop()
