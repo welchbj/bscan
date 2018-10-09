@@ -1,6 +1,4 @@
 # see: https://packetstormsecurity.com/files/18307/nmap-services.html
-# TODO: msrdp/ms-wbt-server, ipp, java-rmi, vnc/vnc-http, oracle-tns,
-#       kerberos-sec, imap/imap3/imaps, https, ssl/http, ssl/http-alt
 # Commands accept arguments: <port>/<ports>, <target>, <fout>,
 #                            <wordlist>, <userlist>, <passlist>
 # If <port> is used instead of <ports>, then a separate entry for each
@@ -77,6 +75,19 @@
     nmap = "nmap -v -Pn -p <ports> --script=dns-service-discovery,dns-cache-snoop,dns-check-zone,dns-zone-transfer <target> -oN <fout>"
 
 
+[tftp]  # 69
+  nmap-service-names = [
+    "tftp"
+  ]
+
+  recommendations = [
+    "tftp <target>:<port>"
+  ]
+
+  [tftp.scans]
+    nmap = "nmap -vv -sU -Pn -p <ports> --script=tftp-enum <target> -oN <fout>"
+
+
 [http]  # 80, 591
   nmap-service-names = [
     "http",
@@ -99,17 +110,47 @@
     gobuster = "gobuster -e -w <wordlist> -u http://<target>:<port>/ 2>&1 | tee <fout>"
 
 
+[kerberos]
+  nmap-service-names = [
+    "kerberos-sec"
+  ]
+
+  recommendations = [
+    # none
+  ]
+
+  [kerberos.scans]
+    nmap = "nmap -vv -Pn -p <ports> --script=krb5-enum-users <target> -oN <fout>"
+
+
+[https]  # 443
+  nmap-service-names = [
+    "https",
+    "ssl/http",
+    "ssl/http-alt"
+  ]
+
+  recommendations = [
+    # none
+  ]
+
+  [https.scans]
+    nikto = "nikto -host <target> -port <ports> -ssl 2>&1 | tee <fout>"
+    nmap = "nmap -vv -Pn -p <ports> --script=ssl-ccs-injection,ssl-cert,ssl-date,ssl-enum-ciphers,ssl-heartbleed,ssl-known-key,ssl-poodle <target> -oN <fout>"
+    gobuster = "gobuster -e -w <wordlist> -u https://<target>:<port>/ 2>&1 | tee <fout>"
+
+
 [pop3]  # 110
   nmap-service-names = [
     "pop3"
   ]
 
   recommendations = [
-    # TODO
+    "telnet <target> <port>"
   ]
 
   [pop3.scans]
-    # TODO
+    nmap = "nmap -vv -Pn -p <ports> --script=pop3-capabilities,pop3-ntlm-info <target> -oN <fout>"
 
 
 [smb]  # 139, 445
@@ -130,6 +171,22 @@
   [smb.scans]
     "nmap.tcp" = "nmap -vv -Pn -p <ports> --script smb-vuln* <target> -oN <fout>"
     enum4linux = "enum4linux -a <target> 2>&1 | tee <fout>"
+
+
+[imap]  # 143, 220, 585, 993
+  nmap-service-names = [
+    "imap",
+    "imap3",
+    "imap4-ssl",
+    "imaps"
+  ]
+
+  recommendations = [
+    "telnet <target> <port>"
+  ]
+
+  [imap.scans]
+    nmap = "nmap -vv -Pn -p <ports> --script=imap-capabilities,imap-ntlm-info <target> -oN <fout>"
 
 
 [msrpc]
@@ -166,7 +223,7 @@
     snmpwalk = "snmpwalk -c public -v1 <target> 2>&1 | tee <fout>"
 
 
-[ldap]
+[ldap]  # 389
   nmap-service-names = [
     "ldap"
   ]
@@ -177,6 +234,33 @@
 
   [ldap.scans]
     enum4linux = "enum4linux -l <target> 2>&1 | tee <fout>"
+
+
+[cups]
+  nmap-service-names = [
+    "ipp"
+  ]
+
+  recommendations = [
+    # none
+  ]
+
+  [cups.scans]
+    nmap = "nmap -vv -Pn -p <ports> --script=cups-info,cups-queue-info <target> -oN <fout>"
+
+
+[rmi]  # 1033
+  nmap-service-names = [
+    "java-rmi",
+    "rmiregistry"
+  ]
+
+  recommendations = [
+    # none
+  ]
+
+  [rmi.scans]
+    nmap = "nmap -vv -Pn -p <ports> --script=rmi-vuln-classloader,rmi-dumpregistry <target> -oN <fout>"
 
 
 [mssql]  # 1433, 1434
@@ -192,7 +276,21 @@
   ]
 
   [mssql.scans]
+    nmap = "nmap -vv -Pn -p <ports> --script=ms-sql-config,ms-sql-dump-hashes,ms-sql-empty-password,ms-sql-info,ms-sql-ntlm-info,ms-sql-tables <target> -oN <fout>"
+
+
+[oracle]  # 1521
+  nmap-service-names = [
+    "oracle",
+    "oracle-tns"
+  ]
+
+  recommendations = [
     # none
+  ]
+
+  [oracle.scans]
+    nmap = "nmap -vv -Pn -p <ports> --script=oracle-enum-users,oracle-tns-version <target> -oN <fout>"
 
 
 [mysql]  # 3306
@@ -205,4 +303,31 @@
   ]
 
   [mysql.scans]
-    nmap = "nmap -vv -Pn --script=mysql-variables,mysql-vuln-cve2012-2122,mysql-info,mysql-users,mysql-enum,mysql-databases,mysql-dump-hashes <target> -oN <fout>"
+    nmap = "nmap -vv -Pn -p <ports> --script=mysql-variables,mysql-vuln-cve2012-2122,mysql-info,mysql-users,mysql-enum,mysql-databases,mysql-dump-hashes <target> -oN <fout>"
+
+
+[remotedesktop]  # 3389
+  nmap-service-names = [
+    "ms-wbt-server",
+    "msrdp"
+  ]
+
+  recommendations = [
+    "rdesktop -u Administrator -p administrator <target>:<port>"
+  ]
+
+  [remotedesktop.scans]
+    nmap = "nmap -vv -Pn -p <ports> --script=rdp-enum-encryption,rdp-vuln-ms12-020 <target> -oN <fout>"
+
+
+[vnc]
+  nmap-service-names = [
+    "vnc"
+  ]
+
+  recommendations = [
+    # none
+  ]
+
+  [vnc.scans]
+    nmap = "nmap -vv -Pn -p <ports> --script=vnc-info,vnc-title <target> -oN <fout>"
