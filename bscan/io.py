@@ -33,11 +33,11 @@ print_i_d1 = partial(print, blue('[I] '), sep='')
 print_w_d1 = partial(print, yellow('[W] '), sep='')
 print_e_d1 = partial(print, red('[E] '), sep='')
 print_i_d2 = partial(print, blue('  [I] '), sep='')
-print_w_d2 = partial(print, yellow('  [W]'), sep='')
-print_e_d2 = partial(print, red('  [E]'), sep='')
-print_i_d3 = partial(print, blue('    [I]'), sep='')
-print_w_d3 = partial(print, yellow('    [W]'), sep='')
-print_e_d3 = partial(print, red('    [E]'), sep='')
+print_w_d2 = partial(print, yellow('  [W] '), sep='')
+print_e_d2 = partial(print, red('  [E] '), sep='')
+print_i_d3 = partial(print, blue('    [I] '), sep='')
+print_w_d3 = partial(print, yellow('    [W] '), sep='')
+print_e_d3 = partial(print, red('    [E] '), sep='')
 
 
 def path_exists(path: str) -> bool:
