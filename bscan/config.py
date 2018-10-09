@@ -6,6 +6,9 @@ import toml
 
 from argparse import Namespace
 from asyncio import Lock
+from typing import (
+    Any,
+    Dict)
 
 from bscan.errors import (
     BscanConfigError,
@@ -21,7 +24,7 @@ CONFIGURATION_DIR = os.path.join(BSCAN_BASE_DIR, 'configuration')
 PATTERNS_FILE = os.path.join(CONFIGURATION_DIR, 'patterns.txt')
 SERVICES_FILE = os.path.join(CONFIGURATION_DIR, 'services.toml')
 
-config = dict()
+config: Dict[str, Any] = dict()
 lock = Lock()
 
 
@@ -101,13 +104,13 @@ async def init_config(ns: Namespace) -> None:
         config['udp'] = ns.udp
 
 
-async def write_config_value(key: str, val: object) -> None:
+async def write_config_value(key: str, val: Any) -> None:
     """Set a configuraton value."""
     async with lock:
         config[key] = val
 
 
-def get_config_value(key: str) -> object:
+def get_config_value(key: str) -> Any:
     """Retrieve a configuration value."""
     try:
         return config[key]

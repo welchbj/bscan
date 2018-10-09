@@ -6,7 +6,9 @@ import re
 from itertools import chain
 from functools import partial
 from typing import (
-    Generator,
+    Any,
+    AsyncGenerator,
+    Coroutine,
     List,
     Set,
     Tuple)
@@ -56,17 +58,20 @@ async def scan_target(target: str) -> None:
     _print_unmatched_services(target, qs_unmatched_services)
 
     # run the ts and scans based on qs-found ports
-    scan_cmds = [js.build_scans() for js in qs_joined_services]
-    scans = [run_service_s(target, cmd) for cmd in chain(*scan_cmds)]
+    scan_cmds: List[List[str]] = \
+        [js.build_scans() for js in qs_joined_services]
+    scans: List[Coroutine[Any, Any, Any]] = \
+        [run_service_s(target, cmd) for cmd in chain(*scan_cmds)]
     if do_thorough:
         scans.append(run_nmap_ts(target))
     else:
         print_i_d2(target, ': skipping thorough scan')
     res = await asyncio.gather(*scans)
-    ts_parsed_services = res[-1] if do_thorough else set()
+    ts_parsed_services: Set[ParsedService] = res[-1] if do_thorough else set()
 
     # diff open ports between quick and thorough scans
-    new_services = ts_parsed_services - qs_parsed_services
+    new_services: Set[ParsedService] = ts_parsed_services - qs_parsed_services
+    ts_joined_services: List[DetectedService] = []
     if new_services:
         ts_unmatched_services, ts_joined_services = \
             join_services(target, new_services)
@@ -170,14 +175,18 @@ async def run_udp_s(target: str) -> Set[ParsedService]:
     raise NotImplementedError
 
 
-async def proc_spawn(target: str, cmd: str) -> Generator[str, None, None]:
+async def proc_spawn(target: str, cmd: str) -> AsyncGenerator[str, None]:
     """Asynchronously yield lines from stdout of a spawned subprocess."""
     print_i_d3(target, ': spawning subprocess `', cmd, '`')
     proc = await asyncio.create_subprocess_shell(
         cmd,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE)
-    async for line in proc.stdout:
+
+    # must ignore typing below because __aiter__ and __anext__ are defined
+    # for asyncio.streams.StreamReader based on Python being >= 3.5
+    # see: https://github.com/python/cpython/blob/64bcedce8d61e1daa9ff7980cc07988574049b1f/Lib/asyncio/streams.py#L685-L695  # noqa
+    async for line in proc.stdout:  # type: ignore
         yield line.decode('utf-8').strip()
 
     exit_code = await proc.wait()
@@ -242,7 +251,7 @@ def _print_matched_services(target: str,
 
 
 def _print_unmatched_services(target: str,
-                              unmatched_services: List[ParsedService]) -> None:
+                              unmatched_services: Set[ParsedService]) -> None:
     """Print information about unmatched services."""
     for ps in unmatched_services:
         print_w_d3(target, ': unable to match reported ',
