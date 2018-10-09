@@ -3,26 +3,29 @@
 import asyncio
 import re
 
-from collections import namedtuple
+from itertools import chain
 from functools import partial
 from typing import (
     Generator,
     List,
-    Set)
+    Set,
+    Tuple)
 
 from bscan.config import get_config_value
 from bscan.io import (
     blue,
     print_i_d2,
     print_i_d3,
+    print_w_d1,
     print_w_d3,
-    purple)
+    purple,
+    yellow)
+from bscan.models import (
+    DetectedService,
+    ParsedService)
 from bscan.structure import (
     get_recommendations_txt_file,
     get_scan_file)
-
-DetectedService = namedtuple('DetectedService', ['name', 'port'])
-"""Encapsulate the data associated with a detected service."""
 
 UNIC_QUICK_SCAN = (
     'unicornscan {target} 2>&1 | tee "{fout}"')
@@ -46,26 +49,31 @@ async def scan_target(target: str) -> None:
     do_thorough = not get_config_value('quick-only')
 
     # run quick scan
-    qs_services = await run_qs(target)
+    qs_parsed_services = await run_qs(target)
+    qs_unmatched_services, qs_joined_services = \
+        join_services(target, qs_parsed_services)
+    _print_matched_services(target, qs_joined_services)
+    _print_unmatched_services(target, qs_unmatched_services)
 
     # run the ts and scans based on qs-found ports
-    scans = [run_service_s(target, cmd) for
-             cmd in build_scans(target, qs_services)]
+    scan_cmds = [js.build_scans() for js in qs_joined_services]
+    scans = [run_service_s(target, cmd) for cmd in chain(*scan_cmds)]
     if do_thorough:
         scans.append(run_nmap_ts(target))
     else:
         print_i_d2(target, ': skipping thorough scan')
     res = await asyncio.gather(*scans)
-    ts_services = res[0] if do_thorough else set()
+    ts_parsed_services = res[-1] if do_thorough else set()
 
     # diff open ports between quick and thorough scans
-    new_services = ts_services - qs_services
+    new_services = ts_parsed_services - qs_parsed_services
     if new_services:
-        print_i_d2(target, ': Nmap thorough scan discovered the following '
-                   'additional service(s): ',
-                   ', '.join([ns.name for ns in new_services]))
-        scans = [run_service_s(target, cmd) for
-                 cmd in build_scans(target, new_services)]
+        ts_unmatched_services, ts_joined_services = \
+            join_services(target, new_services)
+        _print_matched_services(target, ts_joined_services)
+        _print_unmatched_services(target, ts_unmatched_services)
+        scan_cmds = [js.build_scans() for js in ts_joined_services]
+        scans = [run_service_s(target, cmd) for cmd in chain(*scan_cmds)]
         await asyncio.gather(*scans)
     elif do_thorough:
         print_i_d2(target, ': thorough scan discovered no additional '
@@ -73,19 +81,28 @@ async def scan_target(target: str) -> None:
 
     # run UDP scan
     if get_config_value('udp'):
-        udp_services = await run_udp_s(target)
+        print_w_d1('UDP scan not yet implemented; skipping it')
+        # udp_services = await run_udp_s(target)
         # TODO: handle UDP results
 
-    # report on scanned/unscanned ports
-    # TODO
-
     # write recommendations file for further manual commands
-    # TODO
+    for js in chain(qs_joined_services, ts_joined_services):
+        if not js.recommendations:
+            continue
 
-    pass
+        with open(get_recommendations_txt_file(js.target), 'a') as f:
+            fprint = partial(print, file=f, sep='')
+            section_header = (
+                'The following commands are recommended for service ' +
+                js.name + ' running on port(s) ' + js.port_str() + ':')
+            fprint(section_header)
+            fprint('-'*len(section_header))
+            for rec in js.build_recommendations():
+                fprint(rec)
+            fprint()
 
 
-async def run_qs(target: str) -> Set[DetectedService]:
+async def run_qs(target: str) -> Set[ParsedService]:
     """Run a quick scan on a target using the configured option."""
     method = get_config_value('quick-scan')
     if method == 'unicornscan':
@@ -94,7 +111,7 @@ async def run_qs(target: str) -> Set[DetectedService]:
         return await run_nmap_qs(target)
 
 
-async def run_unicornscan_qs(target: str) -> Set[DetectedService]:
+async def run_unicornscan_qs(target: str) -> Set[ParsedService]:
     """Run a quick scan on a target via unicornscan."""
     print_i_d2(target, ': beginning unicornscan quick scan')
     services = set()
@@ -108,15 +125,14 @@ async def run_unicornscan_qs(target: str) -> Set[DetectedService]:
             tokens = line.replace('[', ' ').replace(']', ' ').split()
             name = tokens[2]
             port = int(tokens[3])
-            services.add(DetectedService(name, port))
+            services.add(ParsedService(name, port))
 
     print_i_d2(target, ': finished unicornscan quick scan')
     return services
 
 
-async def run_nmap_qs(target: str) -> Set[DetectedService]:
+async def run_nmap_qs(target: str) -> Set[ParsedService]:
     """Run a quick scan on a target using Nmap."""
-    # TODO
     raise NotImplementedError
 
 
@@ -126,7 +142,7 @@ async def run_service_s(target: str, cmd: str) -> None:
         match_patterns(target, line)
 
 
-async def run_nmap_ts(target: str) -> Set[DetectedService]:
+async def run_nmap_ts(target: str) -> Set[ParsedService]:
     """Run a thorough TCP scan on a target using Nmap."""
     print_i_d2(target, ': beginning Nmap TCP thorough scan')
     services = set()
@@ -137,18 +153,20 @@ async def run_nmap_ts(target: str) -> Set[DetectedService]:
     async for line in proc_spawn(target, nmap_cmd):
         match_patterns(target, line)
         tokens = line.split()
+        # TODO: parse first instance of Nmap discovering port rather than
+        #       the second in the scan summary
+        # TODO: this is probably more efficient as a regex
         if 'Discovered' not in line and '/tcp' in line and 'open' in tokens:
             name = tokens[2].rstrip('?')
             port = int(tokens[0].split('/')[0])
-            services.add(DetectedService(name, port))
+            services.add(ParsedService(name, port))
 
     print_i_d2(target, ': finished Nmap thorough scan')
     return services
 
 
-async def run_udp_s(target: str) -> Set[DetectedService]:
+async def run_udp_s(target: str) -> Set[ParsedService]:
     """Run a UDP scan on a target using Nmap."""
-    # TODO
     raise NotImplementedError
 
 
@@ -168,76 +186,33 @@ async def proc_spawn(target: str, cmd: str) -> Generator[str, None, None]:
                    'exit code of ', exit_code)
 
 
-def build_scans(target: str,
-                detected_services: Set[DetectedService]) -> List[str]:
-    """Build scan commands from the detected services and services config."""
-    cmds = []
+def join_services(target: str,
+                  services: Set[ParsedService]) ->\
+                  Tuple[Set[ParsedService], List[DetectedService]]:
+    """Join services on multiple ports into a consolidated set.
 
-    # TODO: refactor our protocol structure into a separate class with its
-    #       own functions such as templating filling; we need to maintain an
-    #       efficient way of hashing these to be able to efficiently organize
-    #       them by and diff them between quick and thorough scans
+    Returns:
+        A set of unmatched services and a list of consolidated service
+        matches.
 
-    # this implementation is wildly inefficient
-    wordlist = get_config_value('web-word-list')
-    userlist = get_config_value('brute-user-list')
-    passlist = get_config_value('brute-pass-list')
+    """
     defined_services = get_config_value('services')
+    unmatched_services = services.copy()
+    joined_services = []
     for protocol, config in defined_services.items():
-        matches = [ds for ds in detected_services if
-                   ds.name in config['nmap-service-names']]
+        matches = [s for s in services if s.name in
+                   config['nmap-service-names']]
         if matches:
-            port_ints = sorted(ds.port for ds in matches)
-            ports_str = ','.join(str(p) for p in port_ints)
-            print_i_d3(target, ': matched services on port(s) ',
-                       blue(ports_str), ' to ', blue(protocol), ' protocol')
+            ds = DetectedService(
+                protocol,
+                target,
+                tuple(sorted(s.port for s in matches)),
+                config['scans'],
+                tuple(config['recommendations']))
+            joined_services.append(ds)
+            unmatched_services -= set(matches)
 
-            # create scan commands
-            for key, cmd in config['scans'].items():
-                fout = get_scan_file(target, protocol + '.' + key)
-                cmd = template_replace(
-                    cmd, target, fout, wordlist, userlist, passlist)
-                if '<ports>' in cmd:
-                    cmds.append(cmd.replace('<ports>', ports_str))
-                elif '<port>' in cmd:
-                    cmds.extend([cmd.replace('<port>', str(port)) for
-                                 port in port_ints])
-                else:
-                    cmds.append(cmd)
-
-            # write to recommendations file
-            with open(get_recommendations_txt_file(target), 'a') as f:
-                fprint = partial(print, sep='', file=f)
-                recs = config['recommendations']
-                if recs:
-                    fprint('Recommendations for protocol `', protocol,
-                           '` on ports ', ports_str, ':')
-                    for cmd in recs:
-                        cmd = template_replace(
-                            cmd, target, fout, wordlist, userlist, passlist)
-                        if '<ports>' in cmd:
-                            fprint(cmd.replace('<ports>', ports_str))
-                        elif '<port>' in cmd:
-                            for port in port_ints:
-                                fprint(cmd.replace('<port>', str(port)))
-                        else:
-                            fprint(cmd)
-                    fprint()
-
-            print_i_d2(target, ': finished configuring scans and '
-                       'recommendations for protocol `', protocol, '`')
-
-    return cmds
-
-
-def template_replace(cmd_template: str, target: str, fout: str, wordlist: str,
-                     userlist: str, passlist: str):
-    """Replace values in a command template."""
-    return (cmd_template.replace('<target>', target)
-                        .replace('<fout>', fout)
-                        .replace('<wordlist>', wordlist)
-                        .replace('<userlist>', userlist)
-                        .replace('<passlist>', passlist))
+    return unmatched_services, joined_services
 
 
 def match_patterns(target: str, line: str) -> None:
@@ -257,3 +232,19 @@ def match_patterns(target: str, line: str) -> None:
         print_i_d3(
             target, ': matched pattern in line `', highlighted_line, '`')
 
+
+def _print_matched_services(target: str,
+                            matched_services: List[DetectedService]) -> None:
+    """Print information about matched services."""
+    for ds in matched_services:
+        print_i_d3(target, ': matched service(s) on port(s) ',
+                   blue(ds.port_str()), ' to ', blue(ds.name), ' protocol')
+
+
+def _print_unmatched_services(target: str,
+                              unmatched_services: List[ParsedService]) -> None:
+    """Print information about unmatched services."""
+    for ps in unmatched_services:
+        print_w_d3(target, ': unable to match reported ',
+                   yellow(ps.name), ' on port ', yellow(str(ps.port)),
+                   ' to a configured service')
