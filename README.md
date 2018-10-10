@@ -4,8 +4,32 @@
 
 An asynchronous network scanning, enumeration, and recommendation tool.
 
+
 ## Installation
 
 ``` sh
 pip install bscan
+```
+
+
+## Packaging Releases
+
+Install the development requirements
+``` sh
+pip install -r dev-requirements.txt
+```
+
+Build the source and wheel distributions
+``` sh
+python setup.py bdist_wheel sdist
+```
+
+Run post-build checks
+``` sh
+twine check dist/*
+```
+
+Upload to PyPI
+``` sh
+twine upload dist/*
 ```
