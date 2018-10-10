@@ -1,6 +1,6 @@
 """Setup configuration for the `bscan` program."""
 
-import codes
+import codecs
 import os
 
 from setuptools import (
@@ -13,14 +13,14 @@ REQS_FILE = os.path.join(HERE, 'requirements.txt')
 BSCAN_DIR = os.path.join(HERE, 'bscan')
 VERSION_FILE = os.path.join(BSCAN_DIR, 'version.py')
 
-with codes.open(VERSION_FILE, encoding='utf-8') as f:
+with codecs.open(VERSION_FILE, encoding='utf-8') as f:
     exec(f.read())
     version = __version__  # noqa
 
-with codes.open(README_FILE, encoding='utf-8') as f:
+with codecs.open(README_FILE, encoding='utf-8') as f:
     long_desc = f.read()
 
-with codes.open(REQS_FILE, encoding='utf-8') as f:
+with codecs.open(REQS_FILE, encoding='utf-8') as f:
     install_requires = [line.strip() for line in f if line.strip()]
 
 setup(
