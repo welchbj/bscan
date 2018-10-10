@@ -1,7 +1,7 @@
 include LICENSE.txt
 include README.md
 
-graft configuration
+graft bscan/configuration
 graft static
 
 global-exclude *.py[cod]
