@@ -23,6 +23,7 @@ setup(
     name='bscan',
     version=version,
     description='An asynchronous target scanner',
+    long_description=long_desc,
     author='Brian Welch',
     author_email='welch18@vt.edu',
     url='https://github.com/welchbj/bscan',
