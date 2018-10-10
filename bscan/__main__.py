@@ -10,7 +10,7 @@ from bscan.cli import main as cli_main
 def main():
     """The function pointed to by console_scripts."""
     if 'win' in sys.platform:
-        loop = asyncio.ProactorEventLoop()  # type: ignore
+        loop = asyncio.ProactorEventLoop()
         asyncio.set_event_loop(loop)
     else:
         loop = asyncio.get_event_loop()
