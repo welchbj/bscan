@@ -18,14 +18,14 @@ with codecs.open(VERSION_FILE, encoding='utf-8') as f:
 
 
 with codecs.open(README_FILE, encoding='utf-8') as f:
-    readme_contents = f.read()
+    long_desc = f.read()
 
 
 setup(
     name='bscan',
     version=version,
     description='An asynchronous target scanner',
-    long_description=readme_contents,
+    long_description=long_desc,
     long_description_content_type='text/markdown',
     author='Brian Welch',
     author_email='welch18@vt.edu',

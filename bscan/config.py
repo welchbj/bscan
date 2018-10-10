@@ -7,6 +7,7 @@ import toml
 
 from argparse import Namespace
 from asyncio import Lock
+from pkg_resources import resource_string
 from typing import (
     Any,
     Dict)
@@ -18,16 +19,18 @@ from bscan.io import (
     dir_exists,
     file_exists)
 
-
-THIS_DIR = os.path.dirname(os.path.realpath(__file__))
-BSCAN_BASE_DIR = os.path.dirname(THIS_DIR)
-CONFIGURATION_DIR = os.path.join(BSCAN_BASE_DIR, 'configuration')
-PATTERNS_FILE = os.path.join(CONFIGURATION_DIR, 'patterns.txt')
-REQUIRED_PROGS_FILE = os.path.join(CONFIGURATION_DIR, 'required-programs.txt')
-SERVICES_FILE = os.path.join(CONFIGURATION_DIR, 'services.toml')
-
 config: Dict[str, Any] = dict()
 lock = Lock()
+
+
+def load_config_file(filename: str) -> str:
+    """Packaged-friendly solution to loading file contents as a string."""
+    try:
+        raw_contents = resource_string(__name__, 'configuration/' + filename)
+    except FileNotFoundError:
+        raise BscanConfigError(
+            'Unable to find configuration file `' + filename + '`')
+    return raw_contents.decode('utf-8')
 
 
 async def init_config(ns: Namespace) -> None:
@@ -61,10 +64,7 @@ async def init_config(ns: Namespace) -> None:
                 '`--output-dir` directory ' + config['output-dir'] +
                 ' does not exist')
 
-        patterns = []
-        with open(PATTERNS_FILE, 'r') as f:
-            for line in f:
-                patterns.append(line.rstrip('\n'))
+        patterns = load_config_file('patterns.txt').splitlines()
         if ns.patterns is not None:
             if not ns.patterns:
                 raise BscanConfigError(
@@ -75,11 +75,10 @@ async def init_config(ns: Namespace) -> None:
 
         if not ns.no_program_check:
             not_found_progs = []
-            with open(REQUIRED_PROGS_FILE, 'r') as f:
-                for line in f:
-                    prog = line.rstrip('\n')
-                    if shutil.which(prog) is None:
-                        not_found_progs.append(prog)
+            progs = load_config_file('required-programs.txt').splitlines()
+            for prog in progs:
+                if shutil.which(prog) is None:
+                    not_found_progs.append(prog)
 
             if not_found_progs:
                 raise BscanConfigError(
@@ -96,8 +95,7 @@ async def init_config(ns: Namespace) -> None:
                 'Invalid --quick-scan option; must be either '
                 '`unicornscan` or `nmap`')
 
-        with open(SERVICES_FILE, 'r') as f:
-            config['services'] = toml.loads(f.read())
+        config['services'] = toml.loads(load_config_file('services.toml'))
 
         if ns.web_word_list is None:
             config['web-word-list'] = '/usr/share/dirb/wordlists/big.txt'
