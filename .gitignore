@@ -1,6 +1,7 @@
 __pycache__
 samples/
 .mypy_cache/
+bscan.egg-info/
 *.bscan.d
 *.py[cod]
 *.egg
