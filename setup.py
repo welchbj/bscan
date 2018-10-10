@@ -25,6 +25,7 @@ setup(
     license='MIT',
     install_requires=['colorama', 'toml'],
     packages=find_packages(exclude=['tests', '*.tests', '*.tests.*']),
+    include_package_data=True,
     entry_points={
         'console_scripts': ['bscan = bscan.__main__:main']
     },
