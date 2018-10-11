@@ -31,7 +31,7 @@ def yellow(s: str) -> str:
 
 def shortened_cmd(cmd: str, length: int=80) -> str:
     """Shorten the command to the specified length."""
-    if len(cmd) + 2 < length:
+    if len(cmd) + 2 <= length:
         return '`' + cmd + '`'
 
     return '`' + cmd[:(length-5)] + '...`'
