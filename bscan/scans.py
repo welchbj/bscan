@@ -110,7 +110,7 @@ async def scan_target(target: str) -> None:
                 fprint(rec)
             fprint()
 
-    # remove subprocess tracking for this target; note that initiliazition
+    # remove subprocess tracking for this target; note that initialization
     # of this tracking is performed in the main cli routine
     await remove_subproc_set(target)
 
