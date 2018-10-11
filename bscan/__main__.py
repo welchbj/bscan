@@ -9,7 +9,7 @@ from bscan.cli import main as cli_main
 
 def main():
     """The function pointed to by console_scripts."""
-    if 'win' in sys.platform:
+    if sys.platform == 'win32':
         loop = asyncio.ProactorEventLoop()
         asyncio.set_event_loop(loop)
     else:
