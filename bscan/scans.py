@@ -20,7 +20,8 @@ from bscan.io import (
     print_w_d1,
     print_w_d3,
     purple,
-    yellow)
+    yellow,
+    shortened_cmd)
 from bscan.models import (
     DetectedService,
     ParsedService)
@@ -182,7 +183,7 @@ async def run_udp_s(target: str) -> Set[ParsedService]:
 
 async def proc_spawn(target: str, cmd: str) -> AsyncGenerator[str, None]:
     """Asynchronously yield lines from stdout of a spawned subprocess."""
-    print_i_d3(target, ': spawning subprocess `', cmd, '`')
+    print_i_d3(target, ': spawning subprocess ', shortened_cmd(cmd))
     proc = await asyncio.create_subprocess_shell(
         cmd,
         stdout=asyncio.subprocess.PIPE,
@@ -197,8 +198,8 @@ async def proc_spawn(target: str, cmd: str) -> AsyncGenerator[str, None]:
 
     exit_code = await proc.wait()
     if exit_code != 0:
-        print_w_d3(target, ': subprocess `', cmd, '` exited with non-zero ',
-                   'exit code of ', exit_code)
+        print_w_d3(target, ': subprocess `', shortened_cmd(cmd),
+                   '` exited with non-zero exit code of ', exit_code)
     await remove_running_subproc(target, cmd)
 
 
