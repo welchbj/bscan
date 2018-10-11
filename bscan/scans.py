@@ -13,7 +13,7 @@ from typing import (
     Set,
     Tuple)
 
-from bscan.config import get_config_value
+from bscan.runtime import get_db_value
 from bscan.io import (
     blue,
     print_i_d2,
@@ -30,7 +30,7 @@ from bscan.structure import (
     get_scan_file)
 
 UNIC_QUICK_SCAN = (
-    'unicornscan {target} 2>&1 | tee "{fout}"')
+   'unicornscan {target} 2>&1 | tee "{fout}"')
 """TCP connect() and SYN scans on most common ports."""
 
 NMAP_QUICK_SCAN = (
@@ -48,7 +48,7 @@ NMAP_UDP_SCAN = (
 
 async def scan_target(target: str) -> None:
     """Run quick, thorough, and service scans on a target."""
-    do_thorough = not get_config_value('quick-only')
+    do_thorough = not get_db_value('quick-only')
 
     # run quick scan
     qs_parsed_services = await run_qs(target)
@@ -85,7 +85,7 @@ async def scan_target(target: str) -> None:
                    'services')
 
     # run UDP scan
-    if get_config_value('udp'):
+    if get_db_value('udp'):
         print_w_d1('UDP scan not yet implemented; skipping it')
         # udp_services = await run_udp_s(target)
         # TODO: handle UDP results
@@ -109,7 +109,7 @@ async def scan_target(target: str) -> None:
 
 async def run_qs(target: str) -> Set[ParsedService]:
     """Run a quick scan on a target using the configured option."""
-    method = get_config_value('quick-scan')
+    method = get_db_value('quick-scan')
     if method == 'unicornscan':
         return await run_unicornscan_qs(target)
     else:
@@ -205,7 +205,7 @@ def join_services(target: str,
         matches.
 
     """
-    defined_services = get_config_value('services')
+    defined_services = get_db_value('services')
     unmatched_services = services.copy()
     joined_services = []
     for protocol, config in defined_services.items():
@@ -226,7 +226,7 @@ def join_services(target: str,
 
 def match_patterns(target: str, line: str) -> None:
     """Print a string with matched patterns highlighted in purple."""
-    patterns = get_config_value('patterns')
+    patterns = get_db_value('patterns')
     pos = 0
     highlighted_line = ''
     did_match = False
