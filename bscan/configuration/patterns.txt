@@ -5,3 +5,4 @@
 (?i)joomla
 (?i)phpliteadmin
 (?i)wordpress
+wp
