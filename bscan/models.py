@@ -3,7 +3,7 @@
 from collections import namedtuple
 from typing import List
 
-from bscan.config import get_config_value
+from bscan.runtime import get_db_value
 from bscan.structure import get_scan_file
 
 ParsedService = namedtuple(
@@ -42,9 +42,9 @@ class DetectedService(_DetectedService):
         fout = get_scan_file(self.target, self.name + '.' + scan_name)
         cmd = (cmd.replace('<target>', self.target)
                   .replace('<fout>', fout)
-                  .replace('<wordlist>', get_config_value('web-word-list'))
-                  .replace('<userlist>', get_config_value('brute-user-list'))
-                  .replace('<passlist>', get_config_value('brute-pass-list')))
+                  .replace('<wordlist>', get_db_value('web-word-list'))
+                  .replace('<userlist>', get_db_value('brute-user-list'))
+                  .replace('<passlist>', get_db_value('brute-pass-list')))
 
         if '<ports>' in cmd:
             return [cmd.replace('<ports>', self.port_str())]

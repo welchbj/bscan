@@ -2,7 +2,7 @@
 
 import os
 
-from bscan.config import get_config_value
+from bscan.runtime import get_db_value
 from bscan.errors import BscanForceSkipTarget
 from bscan.io import (
     create_dir,
@@ -17,7 +17,7 @@ from bscan.io import (
 
 def get_base_dir(target: str) -> str:
     """Get the path of the base directory for a scan."""
-    return os.path.join(get_config_value('output-dir'), f'{target}.bscan.d')
+    return os.path.join(get_db_value('output-dir'), f'{target}.bscan.d')
 
 
 def get_notes_txt_file(target: str) -> str:
@@ -76,7 +76,7 @@ def create_dir_skeleton(target: str) -> None:
 
     base_dir = get_base_dir(target)
     if path_exists(base_dir):
-        if not get_config_value('hard'):
+        if not get_db_value('hard'):
             raise BscanForceSkipTarget(
                 'Base directory ' + base_dir + ' already exists, use '
                 '`--hard` option to force overwrite')

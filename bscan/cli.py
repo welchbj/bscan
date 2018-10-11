@@ -10,8 +10,7 @@ from argparse import (
 from colorama import init as init_colorama
 from typing import List
 
-from bscan.config import (
-    init_config)
+from bscan.runtime import init_db
 from bscan.errors import (
     BscanConfigError,
     BscanError,
@@ -160,7 +159,7 @@ async def main(args: List[str]=None) -> int:
         init_colorama()
         opts = get_parsed_args(args)
         print_i_d1('Initializing configuration from command-line arguments')
-        await init_config(opts)
+        await init_db(opts)
 
         print_i_d1('Colors: ', blue('info'), ', ', yellow('warnings'), ', ',
                    red('errors'), ', and ', purple('pattern matches'), sep='')

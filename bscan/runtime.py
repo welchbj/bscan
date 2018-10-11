@@ -19,7 +19,7 @@ from bscan.io import (
     dir_exists,
     file_exists)
 
-config: Dict[str, Any] = dict()
+db: Dict[str, Any] = dict()
 lock = Lock()
 
 
@@ -33,35 +33,35 @@ def load_config_file(filename: str) -> str:
     return raw_contents.decode('utf-8')
 
 
-async def init_config(ns: Namespace) -> None:
+async def init_db(ns: Namespace) -> None:
     """Init configuration from default files and command-line arguments."""
     async with lock:
         if ns.brute_pass_list is None:
-            config['brute-pass-list'] = '/usr/share/wordlists/fasttrack.txt'
+            db['brute-pass-list'] = '/usr/share/wordlists/fasttrack.txt'
         else:
-            config['brute-pass-list'] = ns.brute_pass_list
-        if not ns.no_file_check and not file_exists(config['brute-pass-list']):
+            db['brute-pass-list'] = ns.brute_pass_list
+        if not ns.no_file_check and not file_exists(db['brute-pass-list']):
             raise BscanConfigError(
-                '`--brute-pass-list` file ' + config['brute-pass-list'] +
+                '`--brute-pass-list` file ' + db['brute-pass-list'] +
                 ' does not exist')
 
         if ns.brute_user_list is None:
-            config['brute-user-list'] = (
+            db['brute-user-list'] = (
                 '/usr/share/wordlists/metasploit/namelist.txt')
         else:
-            config['brute-user-list'] = ns.brute_user_list
-        if not ns.no_file_check and not file_exists(config['brute-user-list']):
+            db['brute-user-list'] = ns.brute_user_list
+        if not ns.no_file_check and not file_exists(db['brute-user-list']):
             raise BscanConfigError(
-                '`--brute-user-list` file ' + config['brute-user-list'] +
+                '`--brute-user-list` file ' + db['brute-user-list'] +
                 ' does not exist')
 
         if ns.output_dir is None:
-            config['output-dir'] = os.getcwd()
+            db['output-dir'] = os.getcwd()
         else:
-            config['output-dir'] = ns.output_dir
-        if not dir_exists(config['output-dir']):
+            db['output-dir'] = ns.output_dir
+        if not dir_exists(db['output-dir']):
             raise BscanConfigError(
-                '`--output-dir` directory ' + config['output-dir'] +
+                '`--output-dir` directory ' + db['output-dir'] +
                 ' does not exist')
 
         patterns = load_config_file('patterns.txt').splitlines()
@@ -71,7 +71,7 @@ async def init_config(ns: Namespace) -> None:
                     '`--patterns` requires at least one regex pattern')
             else:
                 patterns.extend(ns.patterns)
-        config['patterns'] = re.compile('|'.join(patterns))
+        db['patterns'] = re.compile('|'.join(patterns))
 
         if not ns.no_program_check:
             not_found_progs = []
@@ -86,7 +86,7 @@ async def init_config(ns: Namespace) -> None:
                     ' could not be found on this system')
 
         if ns.quick_scan is None or ns.quick_scan == 'unicornscan':
-            config['quick-scan'] = 'unicornscan'
+            db['quick-scan'] = 'unicornscan'
         elif ns.quick_scan == 'nmap':
             raise BscanConfigError(
                 'Nmap quick scan not yet implemented, use `unicornscan`')
@@ -95,38 +95,38 @@ async def init_config(ns: Namespace) -> None:
                 'Invalid --quick-scan option; must be either '
                 '`unicornscan` or `nmap`')
 
-        config['services'] = toml.loads(load_config_file('services.toml'))
+        db['services'] = toml.loads(load_config_file('services.toml'))
 
         if ns.web_word_list is None:
-            config['web-word-list'] = '/usr/share/dirb/wordlists/big.txt'
+            db['web-word-list'] = '/usr/share/dirb/wordlists/big.txt'
         else:
-            config['web-word-list'] = ns.web_word_list
-        if not ns.no_file_check and not file_exists(config['web-word-list']):
+            db['web-word-list'] = ns.web_word_list
+        if not ns.no_file_check and not file_exists(db['web-word-list']):
             raise BscanConfigError(
-                '`--web-word-list` file ' + config['web-word-list'] +
+                '`--web-word-list` file ' + db['web-word-list'] +
                 ' does not exist')
 
-        config['quick-only'] = ns.quick_only
-        config['hard'] = ns.hard
+        db['quick-only'] = ns.quick_only
+        db['hard'] = ns.hard
 
         if ns.ping_sweep:
             raise BscanConfigError(
                 '`--ping-sweep` option not yet implemented')
-        config['ping-sweep'] = ns.ping_sweep
+        db['ping-sweep'] = ns.ping_sweep
 
-        config['udp'] = ns.udp
+        db['udp'] = ns.udp
 
 
-async def write_config_value(key: str, val: Any) -> None:
-    """Set a configuraton value."""
+async def write_db_value(key: str, val: Any) -> None:
+    """Set a database value."""
     async with lock:
-        config[key] = val
+        db[key] = val
 
 
-def get_config_value(key: str) -> Any:
-    """Retrieve a configuration value."""
+def get_db_value(key: str) -> Any:
+    """Retrieve a database value."""
     try:
-        return config[key]
+        return db[key]
     except KeyError:
         raise BscanInternalError(
-            'Attempted to access unknown configuration key')
+            'Attempted to access unknown database key')
