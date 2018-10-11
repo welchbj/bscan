@@ -1,5 +1,6 @@
 """Asynchronous-access global application configuration."""
 
+import asyncio
 import re
 import os
 import shutil
@@ -7,20 +8,30 @@ import toml
 
 from argparse import Namespace
 from asyncio import Lock
+from collections import namedtuple
 from pkg_resources import resource_string
 from typing import (
     Any,
-    Dict)
+    Dict,
+    Set)
 
 from bscan.errors import (
     BscanConfigError,
     BscanInternalError)
 from bscan.io import (
+    print_i_d2,
     dir_exists,
     file_exists)
 
 db: Dict[str, Any] = dict()
 lock = Lock()
+
+_STATUS_POLL_PERIOD = 0.5
+
+RuntimeStats = namedtuple(
+    'RuntimeStats',
+    ['num_active_targets', 'num_total_subprocs'])
+"""An encapsulation of system-wide running subprocess stats."""
 
 
 def load_config_file(filename: str) -> str:
@@ -97,6 +108,17 @@ async def init_db(ns: Namespace) -> None:
 
         db['services'] = toml.loads(load_config_file('services.toml'))
 
+        try:
+            interval = (30 if ns.status_interval is None
+                        else int(ns.status_interval))
+        except ValueError:
+            raise BscanConfigError(
+                'Invalid `--status-interval` integer specified: ' +
+                str(ns.status_interval))
+        db['status-interval'] = interval
+
+        db['subprocesses'] = dict()
+
         if ns.web_word_list is None:
             db['web-word-list'] = '/usr/share/dirb/wordlists/big.txt'
         else:
@@ -130,3 +152,95 @@ def get_db_value(key: str) -> Any:
     except KeyError:
         raise BscanInternalError(
             'Attempted to access unknown database key')
+
+
+async def init_subproc_set(target: str) -> None:
+    """Initialize a list for tracking subprocesses related to a target."""
+    subproc_dict = db['subprocesses']
+    if target in subproc_dict:
+        raise BscanInternalError(
+            'Attempted to initialize existing subprocess set entry for '
+            'target ' + target)
+
+    async with lock:
+        subproc_dict[target] = set()
+
+
+async def remove_subproc_set(target: str) -> None:
+    """Remove the set of subprocesses related to a target."""
+    subproc_dict = db['subprocesses']
+    if target not in subproc_dict:
+        raise BscanInternalError(
+            'Attempted to remove non-existent subprocess set for target ' +
+            target)
+
+    async with lock:
+        subproc_dict.pop(target)
+
+
+async def add_running_subproc(target: str, cmd: str) -> None:
+    """Add a subprocess to the set associateed with a target."""
+    subproc_set = _get_subproc_set(target)
+    if cmd in subproc_set:
+        raise BscanInternalError(
+            'Attempted to add already-running subprocess `' + cmd +
+            '` for target ' + target)
+
+    async with lock:
+        subproc_set.add(cmd)
+
+
+async def remove_running_subproc(target: str, cmd: str) -> None:
+    """Remove a subprocess from the set associated with a target."""
+    subproc_set = _get_subproc_set(target)
+    if cmd not in subproc_set:
+        raise BscanInternalError(
+            'Attempted to remove non-existent subprocess `' + cmd +
+            '` for target ' + target)
+
+    async with lock:
+        subproc_set.remove(cmd)
+
+
+async def status_update_poller() -> None:
+    """Coroutine for periodically printing updates about the scan status."""
+    interval = get_db_value('status-interval')
+    if interval <= 0:
+        raise BscanInternalError(
+            'Attempted status update polling with non-positive interval of ' +
+            str(interval))
+
+    time_elapsed = float(0)
+    while True:
+        stats: RuntimeStats = get_runtime_stats()
+        if stats.num_active_targets < 1:
+            break
+
+        await asyncio.sleep(_STATUS_POLL_PERIOD)
+        time_elapsed += _STATUS_POLL_PERIOD
+        if time_elapsed >= interval:
+            time_elapsed = float(0)
+            print_i_d2(
+                'Scan status: ', stats.num_total_subprocs,
+                ' spawned subprocess(es) currently running across ',
+                stats.num_active_targets, ' target(s)')
+
+
+def get_runtime_stats() -> RuntimeStats:
+    """Get the stats associated with the running subprocesses."""
+    subproc_dict = db['subprocesses']
+    num_active_targets = len(subproc_dict.keys())
+    num_total_subprocs = sum(len(s) for _, s in subproc_dict.items())
+    return RuntimeStats(
+        num_active_targets,
+        num_total_subprocs)
+
+
+def _get_subproc_set(target: str) -> Set[str]:
+    """Ensure and return  a subprocess set for a target."""
+    if target not in db['subprocesses']:
+        raise BscanInternalError(
+            'Attempted to access uninitialized subprocess set for target ' +
+            target)
+
+    return db['subprocesses'][target]

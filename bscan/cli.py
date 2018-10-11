@@ -10,7 +10,6 @@ from argparse import (
 from colorama import init as init_colorama
 from typing import List
 
-from bscan.runtime import init_db
 from bscan.errors import (
     BscanConfigError,
     BscanError,
@@ -31,6 +30,11 @@ from bscan.networks import (
     is_valid_ip_net_addr)
 from bscan.scans import scan_target
 from bscan.structure import create_dir_skeleton
+from bscan.runtime import (
+    init_db,
+    init_subproc_set,
+    get_db_value,
+    status_update_poller)
 from bscan.version import __version__
 
 
@@ -93,6 +97,13 @@ def get_parsed_args(args: List[str]=None) -> Namespace:
         nargs='*',
         metavar='PATTERN',
         help='patterns to highlight in output text')
+
+    parser.add_argument(
+        '--status-interval',
+        action='store',
+        metavar='SECONDS',
+        help='number of seconds to pause in between printing status updates;\n'
+             'non-positive values disable updates')
 
     parser.add_argument(
         '--ping-sweep',
@@ -195,12 +206,21 @@ async def main(args: List[str]=None) -> int:
 
             targets.append(candidate)
 
-        if targets:
-            print_i_d1('Kicking off scans of ', len(targets), ' targets')
-            await asyncio.gather(*[scan_target(target) for target in targets])
-        else:
+        if not targets:
             print_e_d1('No valid targets specified')
             return 1
+
+        # setup subprocess tracking for each valid target
+        await asyncio.gather(
+            *[init_subproc_set(target) for target in targets])
+        print_i_d1('Initialized subprocess tracking for ', len(targets),
+                   ' targets')
+
+        print_i_d1('Kicking off scans of ', len(targets), ' targets')
+        tasks = [scan_target(target) for target in targets]
+        if get_db_value('status-interval') > 0:
+            tasks.append(status_update_poller())
+        await asyncio.gather(*tasks)
 
         print_i_d1('Completed execution')
         return 0

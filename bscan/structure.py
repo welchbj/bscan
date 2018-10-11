@@ -2,7 +2,6 @@
 
 import os
 
-from bscan.runtime import get_db_value
 from bscan.errors import BscanForceSkipTarget
 from bscan.io import (
     create_dir,
@@ -13,6 +12,7 @@ from bscan.io import (
     print_w_d1,
     remove_dir,
     touch_file)
+from bscan.runtime import get_db_value
 
 
 def get_base_dir(target: str) -> str:

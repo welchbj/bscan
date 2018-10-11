@@ -13,7 +13,6 @@ from typing import (
     Set,
     Tuple)
 
-from bscan.runtime import get_db_value
 from bscan.io import (
     blue,
     print_i_d2,
@@ -25,6 +24,11 @@ from bscan.io import (
 from bscan.models import (
     DetectedService,
     ParsedService)
+from bscan.runtime import (
+    add_running_subproc,
+    get_db_value,
+    remove_running_subproc,
+    remove_subproc_set)
 from bscan.structure import (
     get_recommendations_txt_file,
     get_scan_file)
@@ -106,6 +110,10 @@ async def scan_target(target: str) -> None:
                 fprint(rec)
             fprint()
 
+    # remove subprocess tracking for this target; note that initiliazition
+    # of this tracking is performed in the main cli routine
+    await remove_subproc_set(target)
+
 
 async def run_qs(target: str) -> Set[ParsedService]:
     """Run a quick scan on a target using the configured option."""
@@ -182,6 +190,7 @@ async def proc_spawn(target: str, cmd: str) -> AsyncGenerator[str, None]:
         cmd,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE)
+    await add_running_subproc(target, cmd)
 
     # must ignore typing below because __aiter__ and __anext__ are defined
     # for asyncio.streams.StreamReader based on Python being >= 3.5
@@ -193,6 +202,7 @@ async def proc_spawn(target: str, cmd: str) -> AsyncGenerator[str, None]:
     if exit_code != 0:
         print_w_d3(target, ': subprocess `', cmd, '` exited with non-zero ',
                    'exit code of ', exit_code)
+    await remove_running_subproc(target, cmd)
 
 
 def join_services(target: str,
