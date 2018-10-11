@@ -7,29 +7,35 @@ An asynchronous network scanning, enumeration, and recommendation tool.
 
 ## Installation
 
-``` sh
+Download the latest packaged version from PyPI
+```sh
 pip install bscan
+```
+
+Or get the bleeding-edge version from version control
+```sh
+pip install https://github.com/welchbj/bscan/archive/master.tar.gz
 ```
 
 
 ## Packaging Releases
 
 Install the development requirements
-``` sh
+```sh
 pip install -r dev-requirements.txt
 ```
 
 Build the source and wheel distributions
-``` sh
+```sh
 python setup.py bdist_wheel sdist
 ```
 
 Run post-build checks
-``` sh
+```sh
 twine check dist/*
 ```
 
 Upload to PyPI
-``` sh
+```sh
 twine upload dist/*
 ```
