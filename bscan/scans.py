@@ -198,8 +198,8 @@ async def proc_spawn(target: str, cmd: str) -> AsyncGenerator[str, None]:
 
     exit_code = await proc.wait()
     if exit_code != 0:
-        print_w_d3(target, ': subprocess `', shortened_cmd(cmd),
-                   '` exited with non-zero exit code of ', exit_code)
+        print_w_d3(target, ': subprocess ', shortened_cmd(cmd),
+                   ' exited with non-zero exit code of ', exit_code)
     await remove_running_subproc(target, cmd)
 
 
