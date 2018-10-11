@@ -2,6 +2,7 @@
 
 import asyncio
 import contextlib
+import signal
 import sys
 
 from bscan.cli import main as cli_main
@@ -10,6 +11,7 @@ from bscan.cli import main as cli_main
 def main():
     """The function pointed to by console_scripts."""
     if sys.platform == 'win32':
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
         loop = asyncio.ProactorEventLoop()
         asyncio.set_event_loop(loop)
     else:
