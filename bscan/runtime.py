@@ -20,8 +20,10 @@ from bscan.errors import (
     BscanInternalError)
 from bscan.io import (
     print_i_d2,
+    print_i_d3,
     dir_exists,
-    file_exists)
+    file_exists,
+    shortened_cmd)
 
 db: Dict[str, Any] = dict()
 lock = Lock()
@@ -137,6 +139,7 @@ async def init_db(ns: Namespace) -> None:
         db['ping-sweep'] = ns.ping_sweep
 
         db['udp'] = ns.udp
+        db['verbose-status'] = ns.verbose_status
 
 
 async def write_db_value(key: str, val: Any) -> None:
@@ -205,6 +208,7 @@ async def remove_running_subproc(target: str, cmd: str) -> None:
 async def status_update_poller() -> None:
     """Coroutine for periodically printing updates about the scan status."""
     interval = get_db_value('status-interval')
+    verbose = get_db_value('verbose-status')
     if interval <= 0:
         raise BscanInternalError(
             'Attempted status update polling with non-positive interval of ' +
@@ -220,10 +224,16 @@ async def status_update_poller() -> None:
         time_elapsed += _STATUS_POLL_PERIOD
         if time_elapsed >= interval:
             time_elapsed = float(0)
-            print_i_d2(
-                'Scan status: ', stats.num_total_subprocs,
-                ' spawned subprocess(es) currently running across ',
-                stats.num_active_targets, ' target(s)')
+            msg = ('Scan status: ' + str(stats.num_total_subprocs) +
+                   ' spawned subprocess(es) currently running across ' +
+                   str(stats.num_active_targets) + ' target(s)')
+            if verbose:
+                print_i_d2(msg, ', listed below')
+                for target in sorted(_get_active_targets()):
+                    for subproc_cmd in _get_subproc_set(target):
+                        print_i_d3(target, ': ', shortened_cmd(subproc_cmd))
+            else:
+                print_i_d2(msg)
 
 
 def get_runtime_stats() -> RuntimeStats:
@@ -236,8 +246,13 @@ def get_runtime_stats() -> RuntimeStats:
         num_total_subprocs)
 
 
+def _get_active_targets() -> Set[str]:
+    """Get the set of targets being actively scanned."""
+    return set(db['subprocesses'].keys())
+
+
 def _get_subproc_set(target: str) -> Set[str]:
-    """Ensure and return  a subprocess set for a target."""
+    """Ensure and return a subprocess set for a target."""
     if target not in db['subprocesses']:
         raise BscanInternalError(
             'Attempted to access uninitialized subprocess set for target ' +

@@ -133,6 +133,13 @@ def get_parsed_args(args: List[str]=None) -> Namespace:
         help='whether to run UDP scans')
 
     parser.add_argument(
+        '--verbose-status',
+        action='store_true',
+        default=False,
+        help='whether to print verbose runtime status updates, based on \n'
+             'frequency specified by `--status-interval` flag')
+
+    parser.add_argument(
         '--version',
         action='version',
         version=str(__version__),
