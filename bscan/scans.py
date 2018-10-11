@@ -166,9 +166,6 @@ async def run_nmap_ts(target: str) -> Set[ParsedService]:
     async for line in proc_spawn(target, nmap_cmd):
         match_patterns(target, line)
         tokens = line.split()
-        # TODO: parse first instance of Nmap discovering port rather than
-        #       the second in the scan summary
-        # TODO: this is probably more efficient as a regex
         if 'Discovered' not in line and '/tcp' in line and 'open' in tokens:
             name = tokens[2].rstrip('?')
             port = int(tokens[0].split('/')[0])
