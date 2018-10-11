@@ -227,7 +227,7 @@ async def status_update_poller() -> None:
 
 
 def get_runtime_stats() -> RuntimeStats:
-    """Get the stats associated with the running subprocesses."""
+    """Computer and return the runtime statistics object."""
     subproc_dict = db['subprocesses']
     num_active_targets = len(subproc_dict.keys())
     num_total_subprocs = sum(len(s) for _, s in subproc_dict.items())
