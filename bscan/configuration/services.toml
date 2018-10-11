@@ -101,7 +101,8 @@
     "dotdotpwn -m http -h <target> -x <port> -f <pathtoretrieve> -k <keywordthatmustbepresent> -d <depth> -t <millisperrequest> -s",
     "wafw00f http://<target>:/<port>/",
     "nmap -Pn -p <ports> --script http-adobe-coldfusion-apsa1301,http-coldfusion-subzero,http-vuln-cve2009-3960,http-vuln-cve2010-2861 <target> -oN <fout>",
-    "wpscan --url http://<target>:<port>/"
+    "wpscan --url http://<target>:<port>/",
+    "wpscan --url http://<target>:<port>/ --enumerate vp"
   ]
 
   [http.scans]
