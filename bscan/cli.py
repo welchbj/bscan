@@ -60,18 +60,21 @@ def get_parsed_args(args: List[str]=None) -> Namespace:
     parser.add_argument(
         '--brute-pass-list',
         action='store',
-        help='password list to use for brute-forcing')
+        metavar='F',
+        help='filename of password list to use for brute-forcing')
 
     parser.add_argument(
         '--brute-user-list',
         action='store',
-        help='user list to use for brute-forcing')
+        metavar='F',
+        help='filename of user list to use for brute-forcing')
 
     parser.add_argument(
         '--cmd-print-width',
         action='store',
-        help='the max number of characters allowed when printing a running\n'
-             'subprocess')
+        metavar='I',
+        help='the maximum integer number of characters allowed when\n'
+             'printing a running subprocess')
 
     parser.add_argument(
         '--hard',
@@ -82,6 +85,7 @@ def get_parsed_args(args: List[str]=None) -> Namespace:
     parser.add_argument(
         '--max-concurrency',
         action='store',
+        metavar='I',
         help='maximum integer number of subprocesses to run at a time;\n'
              'a non-positive value indicates an unbounded max')
 
@@ -101,21 +105,22 @@ def get_parsed_args(args: List[str]=None) -> Namespace:
     parser.add_argument(
         '--output-dir',
         action='store',
+        metavar='D',
         help='the base directory in which to write output files')
 
     parser.add_argument(
         '--patterns',
         action='store',
         nargs='*',
-        metavar='PATTERN',
-        help='patterns to highlight in output text')
+        metavar='',
+        help='regex patterns to highlight in output text')
 
     parser.add_argument(
         '--status-interval',
         action='store',
-        metavar='SECONDS',
-        help='number of seconds to pause in between printing status updates;\n'
-             'non-positive values disable updates')
+        metavar='I',
+        help='integer number of seconds to pause in between printing\n'
+             'status updates; a non-positive value disables updates')
 
     parser.add_argument(
         '--ping-sweep',
@@ -134,7 +139,7 @@ def get_parsed_args(args: List[str]=None) -> Namespace:
         '--quick-scan',
         action='store',
         default='unicornscan',
-        metavar='METHOD',
+        metavar='QS',
         help='the method for peforming the initial port scan:\n'
              '`unicornscan` or `nmap`')
 
@@ -161,7 +166,7 @@ def get_parsed_args(args: List[str]=None) -> Namespace:
         '--web-word-list',
         action='store',
         type=str,
-        metavar='LIST',
+        metavar='L',
         help='the wordlist to use for scans')
 
     parser.add_argument(
