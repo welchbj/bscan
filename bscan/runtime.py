@@ -51,6 +51,7 @@ def load_config_file(filename: str) -> str:
 async def init_db(ns: Namespace) -> None:
     """Init configuration from default files and command-line arguments."""
     async with lock:
+        # --brute-pass-list
         if ns.brute_pass_list is None:
             db['brute-pass-list'] = '/usr/share/wordlists/fasttrack.txt'
         else:
@@ -60,6 +61,7 @@ async def init_db(ns: Namespace) -> None:
                 '`--brute-pass-list` file ' + db['brute-pass-list'] +
                 ' does not exist')
 
+        # --brute-user-list
         if ns.brute_user_list is None:
             db['brute-user-list'] = (
                 '/usr/share/wordlists/metasploit/namelist.txt')
@@ -70,6 +72,16 @@ async def init_db(ns: Namespace) -> None:
                 '`--brute-user-list` file ' + db['brute-user-list'] +
                 ' does not exist')
 
+        # --max-concurrency
+        try:
+            db['max-concurrency'] = (0 if ns.max_concurrency is None
+                                     else int(ns.max_concurrency))
+        except ValueError:
+            raise BscanConfigError(
+                'Invalid `--max-concurrency` integer specified: ' +
+                str(ns.max_concurrency))
+
+        # --output-dir
         if ns.output_dir is None:
             db['output-dir'] = os.getcwd()
         else:
@@ -79,6 +91,7 @@ async def init_db(ns: Namespace) -> None:
                 '`--output-dir` directory ' + db['output-dir'] +
                 ' does not exist')
 
+        # --patterns; also loads from `configuration/patterns.txt`
         patterns = load_config_file('patterns.txt').splitlines()
         if ns.patterns is not None:
             if not ns.patterns:
@@ -88,6 +101,7 @@ async def init_db(ns: Namespace) -> None:
                 patterns.extend(ns.patterns)
         db['patterns'] = re.compile('|'.join(patterns))
 
+        # --no-program-check
         if not ns.no_program_check:
             not_found_progs = []
             progs = load_config_file('required-programs.txt').splitlines()
@@ -100,6 +114,7 @@ async def init_db(ns: Namespace) -> None:
                     'required programs ' + ', '.join(not_found_progs) +
                     ' could not be found on this system')
 
+        # --quick-scan
         if ns.quick_scan is None or ns.quick_scan == 'unicornscan':
             db['quick-scan'] = 'unicornscan'
         elif ns.quick_scan == 'nmap':
@@ -110,19 +125,22 @@ async def init_db(ns: Namespace) -> None:
                 'Invalid --quick-scan option; must be either '
                 '`unicornscan` or `nmap`')
 
+        # load service information from `configuration/services.toml`
         db['services'] = toml.loads(load_config_file('services.toml'))
 
+        # --status-interval
         try:
-            interval = (30 if ns.status_interval is None
-                        else int(ns.status_interval))
+            db['status-interval'] = (30 if ns.status_interval is None
+                                     else int(ns.status_interval))
         except ValueError:
             raise BscanConfigError(
                 'Invalid `--status-interval` integer specified: ' +
                 str(ns.status_interval))
-        db['status-interval'] = interval
 
+        # runtime tracking of active subprocesses
         db['subprocesses'] = dict()
 
+        # --web-word-list
         if ns.web_word_list is None:
             db['web-word-list'] = '/usr/share/dirb/wordlists/big.txt'
         else:
@@ -132,15 +150,22 @@ async def init_db(ns: Namespace) -> None:
                 '`--web-word-list` file ' + db['web-word-list'] +
                 ' does not exist')
 
+        # --quick-only
         db['quick-only'] = ns.quick_only
+
+        # --hard
         db['hard'] = ns.hard
 
+        # --ping-sweep
         if ns.ping_sweep:
             raise BscanConfigError(
                 '`--ping-sweep` option not yet implemented')
         db['ping-sweep'] = ns.ping_sweep
 
+        # --udp
         db['udp'] = ns.udp
+
+        # --verbose-status
         db['verbose-status'] = ns.verbose_status
 
 
@@ -179,6 +204,18 @@ async def proc_spawn(target: str, cmd: str) -> AsyncGenerator[str, None]:
         print_w_d3(target, ': subprocess ', shortened_cmd(cmd),
                    ' exited with non-zero exit code of ', exit_code)
     await remove_running_subproc(target, cmd)
+
+
+async def gather_throttled(*aws):
+    """Run specified awaitables as per configured max-concurrency."""
+    batch_size = get_db_value('max-concurrency')
+    if batch_size < 1 or batch_size >= len(aws):
+        yield await asyncio.gather(*aws)
+    else:
+        batched_aws = [aws[i:i+batch_size] for
+                       i in range(0, len(aws), batch_size)]
+        for batch in batched_aws:
+            yield await asyncio.gather(*batch)
 
 
 async def init_subproc_set(target: str) -> None:
