@@ -170,7 +170,7 @@ def get_parsed_args(args: Optional[List[str]]=None) -> Namespace:
         '--web-word-list',
         action='store',
         type=str,
-        metavar='L',
+        metavar='F',
         help='the wordlist to use for scans')
 
     parser.add_argument(
