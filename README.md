@@ -44,8 +44,7 @@ What's going on here?
 * `--verbose-status` means that each of these status updates will print details of all currently-running scan subprocesses
 * `scanme.nmap.org` is the host upon which we want to enumerate
 
-
-The default configuration files can be found in the [`bscan/configuation`](bscan/configuration) directory, and serve the following purposes:
+`bscan` also relies on some additional configuration files. The default files can be found in the [`bscan/configuation`](bscan/configuration) directory and serve the following purposes:
 * [`patterns.txt`](bscan/configuration/patterns.txt) specifies the regex patterns to be highlighted in console output when matched with scan output
 * [`required-programs.txt`](bscan/configuration/required-programs.txt) specifies the installed programs that `bscan` plans on using
 * [`services.toml`](bscan/configuration/services.toml) defines the scans be run on the target(s) on a per-service basis
