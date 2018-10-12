@@ -7,7 +7,6 @@ from itertools import chain
 from functools import partial
 from typing import (
     Any,
-    AsyncGenerator,
     Coroutine,
     List,
     Set,
@@ -20,15 +19,13 @@ from bscan.io import (
     print_w_d1,
     print_w_d3,
     purple,
-    yellow,
-    shortened_cmd)
+    yellow)
 from bscan.models import (
     DetectedService,
     ParsedService)
 from bscan.runtime import (
-    add_running_subproc,
     get_db_value,
-    remove_running_subproc,
+    proc_spawn,
     remove_subproc_set)
 from bscan.structure import (
     get_recommendations_txt_file,
@@ -179,28 +176,6 @@ async def run_nmap_ts(target: str) -> Set[ParsedService]:
 async def run_udp_s(target: str) -> Set[ParsedService]:
     """Run a UDP scan on a target using Nmap."""
     raise NotImplementedError
-
-
-async def proc_spawn(target: str, cmd: str) -> AsyncGenerator[str, None]:
-    """Asynchronously yield lines from stdout of a spawned subprocess."""
-    print_i_d3(target, ': spawning subprocess ', shortened_cmd(cmd))
-    proc = await asyncio.create_subprocess_shell(
-        cmd,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE)
-    await add_running_subproc(target, cmd)
-
-    # must ignore typing below because __aiter__ and __anext__ are defined
-    # for asyncio.streams.StreamReader based on Python being >= 3.5
-    # see: https://github.com/python/cpython/blob/64bcedce8d61e1daa9ff7980cc07988574049b1f/Lib/asyncio/streams.py#L685-L695  # noqa
-    async for line in proc.stdout:  # type: ignore
-        yield line.decode('utf-8').strip()
-
-    exit_code = await proc.wait()
-    if exit_code != 0:
-        print_w_d3(target, ': subprocess ', shortened_cmd(cmd),
-                   ' exited with non-zero exit code of ', exit_code)
-    await remove_running_subproc(target, cmd)
 
 
 def join_services(target: str,

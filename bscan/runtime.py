@@ -12,6 +12,7 @@ from collections import namedtuple
 from pkg_resources import resource_string
 from typing import (
     Any,
+    AsyncGenerator,
     Dict,
     Set)
 
@@ -21,6 +22,7 @@ from bscan.errors import (
 from bscan.io import (
     print_i_d2,
     print_i_d3,
+    print_w_d3,
     dir_exists,
     file_exists,
     shortened_cmd)
@@ -155,6 +157,28 @@ def get_db_value(key: str) -> Any:
     except KeyError:
         raise BscanInternalError(
             'Attempted to access unknown database key')
+
+
+async def proc_spawn(target: str, cmd: str) -> AsyncGenerator[str, None]:
+    """Asynchronously yield lines from stdout of a spawned subprocess."""
+    print_i_d3(target, ': spawning subprocess ', shortened_cmd(cmd))
+    proc = await asyncio.create_subprocess_shell(
+        cmd,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE)
+    await add_running_subproc(target, cmd)
+
+    # must ignore typing below because __aiter__ and __anext__ are defined
+    # for asyncio.streams.StreamReader based on Python being >= 3.5
+    # see: https://github.com/python/cpython/blob/64bcedce8d61e1daa9ff7980cc07988574049b1f/Lib/asyncio/streams.py#L685-L695  # noqa
+    async for line in proc.stdout:  # type: ignore
+        yield line.decode('utf-8').strip()
+
+    exit_code = await proc.wait()
+    if exit_code != 0:
+        print_w_d3(target, ': subprocess ', shortened_cmd(cmd),
+                   ' exited with non-zero exit code of ', exit_code)
+    await remove_running_subproc(target, cmd)
 
 
 async def init_subproc_set(target: str) -> None:
