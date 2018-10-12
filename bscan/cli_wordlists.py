@@ -40,7 +40,8 @@ def get_parsed_args(args: Optional[List[str]]=None) -> Namespace:
     parser.add_argument(
         '--find',
         action='store',
-        help='find the absolute path to a wordlist via its filename')
+        help='find the absolute path to a wordlist via a Unix filename\n'
+             'pattern')
 
     parser.add_argument(
         '--version',
@@ -60,12 +61,10 @@ def main(args: Optional[List[str]]=None) -> int:
     if opts.list:
         walk_wordlists(DEFAULT_WORDLIST_SEARCH_DIRS)
     elif opts.find is not None:
-        wordlist = find_wordlist(DEFAULT_WORDLIST_SEARCH_DIRS, opts.find)
-        if wordlist is None:
-            print('Unable to locate', opts.find)
-        else:
-            print(opts.find)
+        find_wordlist(DEFAULT_WORDLIST_SEARCH_DIRS, opts.find)
     else:
-        print('specify `--list` or `--find <filename>` options')
+        print('No options specified; try `bscan-wordlists --help`',
+              file=sys.stderr)
+        return 1
 
     return 0
