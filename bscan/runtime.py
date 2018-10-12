@@ -1,9 +1,10 @@
 """Asynchronous-access global application configuration."""
 
 import asyncio
-import re
 import os
+import re
 import shutil
+import sys
 import toml
 
 from argparse import Namespace
@@ -40,6 +41,16 @@ RuntimeStats = namedtuple(
     'RuntimeStats',
     ['num_active_targets', 'num_total_subprocs'])
 """An encapsulation of system-wide running subprocess stats."""
+
+
+def good_py_version() -> bool:
+    """Verify that this program is being run with the expected version."""
+    return sys.version_info.major >= 3 and sys.version_info.minor >= 6
+
+
+def py_version_str() -> str:
+    """Get the running Python version as a string."""
+    return str(sys.version_info.major) + '.' + str(sys.version_info.minor)
 
 
 def load_config_file(filename: str) -> str:
