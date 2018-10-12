@@ -4,7 +4,7 @@
 
 An asynchronous network scanning, enumeration, and recommendation tool.
 
-<a href="https://asciinema.org/a/205992?autoplay=1&speed=3"><img src="https://asciinema.org/a/205992.png" width="540"/></a>
+<a href="https://asciinema.org/a/205992?autoplay=1&speed=3"><img src="https://asciinema.org/a/205992.png" width="544"/></a>
 
 
 ## Installation
