@@ -29,7 +29,7 @@ def yellow(s: str) -> str:
     return Fore.YELLOW + s + Style.RESET_ALL
 
 
-def shortened_cmd(cmd: str, length: int=80) -> str:
+def shortened_cmd(cmd: str, length: int) -> str:
     """Shorten the command to the specified length."""
     if len(cmd) + 2 <= length:
         return '`' + cmd + '`'
