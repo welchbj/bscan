@@ -74,6 +74,12 @@ def get_parsed_args(args: List[str]=None) -> Namespace:
         help='force overwrite of existing directories')
 
     parser.add_argument(
+        '--max-concurrency',
+        action='store',
+        help='maximum integer number of subprocesses to run at a time;\n'
+             'a non-positive value indicates an unbounded max')
+
+    parser.add_argument(
         '--no-program-check',
         action='store_true',
         default=False,

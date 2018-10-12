@@ -1,6 +1,5 @@
 """Target scanning and reporting functionality."""
 
-import asyncio
 import re
 
 from itertools import chain
@@ -24,6 +23,7 @@ from bscan.models import (
     DetectedService,
     ParsedService)
 from bscan.runtime import (
+    gather_throttled,
     get_db_value,
     proc_spawn,
     remove_subproc_set)
@@ -68,7 +68,8 @@ async def scan_target(target: str) -> None:
         scans.append(run_nmap_ts(target))
     else:
         print_i_d2(target, ': skipping thorough scan')
-    res = await asyncio.gather(*scans)
+    async for res in gather_throttled(*scans):
+        pass
     ts_parsed_services: Set[ParsedService] = res[-1] if do_thorough else set()
 
     # diff open ports between quick and thorough scans
@@ -81,7 +82,8 @@ async def scan_target(target: str) -> None:
         _print_unmatched_services(target, ts_unmatched_services)
         scan_cmds = [js.build_scans() for js in ts_joined_services]
         scans = [run_service_s(target, cmd) for cmd in chain(*scan_cmds)]
-        await asyncio.gather(*scans)
+        async for res in gather_throttled(*scans):
+            pass
     elif do_thorough:
         print_i_d2(target, ': thorough scan discovered no additional '
                    'services')
