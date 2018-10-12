@@ -36,6 +36,8 @@ from bscan.runtime import (
     init_db,
     init_subproc_set,
     get_db_value,
+    good_py_version,
+    py_version_str,
     status_update_poller)
 from bscan.version import __version__
 
@@ -194,6 +196,11 @@ async def main(args: Optional[List[str]]=None) -> int:
     """
     try:
         init_colorama()
+
+        if not good_py_version():
+            print_w_d1('Running with Python version ', py_version_str(),
+                       'but this program is only tested with Python 3.6')
+
         opts = get_parsed_args(args)
         print_i_d1('Initializing configuration from command-line arguments')
         await init_db(opts)
