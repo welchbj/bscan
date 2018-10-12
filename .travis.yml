@@ -9,3 +9,4 @@ script:
   - mypy bscan
   - python setup.py install
   - bscan --version
+  - bscan-wordlists --version

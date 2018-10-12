@@ -32,6 +32,10 @@ lock = Lock()
 
 _STATUS_POLL_PERIOD = 0.5
 
+DEFAULT_WORDLIST_SEARCH_DIRS = [
+    '/usr/share/wordlists/',
+    '/usr/share/seclists/Passwords/']
+
 RuntimeStats = namedtuple(
     'RuntimeStats',
     ['num_active_targets', 'num_total_subprocs'])
