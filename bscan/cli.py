@@ -68,6 +68,12 @@ def get_parsed_args(args: List[str]=None) -> Namespace:
         help='user list to use for brute-forcing')
 
     parser.add_argument(
+        '--cmd-print-width',
+        action='store',
+        help='the max number of characters allowed when printing a running\n'
+             'subprocess')
+
+    parser.add_argument(
         '--hard',
         action='store_true',
         default=False,

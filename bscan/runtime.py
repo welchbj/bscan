@@ -72,6 +72,18 @@ async def init_db(ns: Namespace) -> None:
                 '`--brute-user-list` file ' + db['brute-user-list'] +
                 ' does not exist')
 
+        # --cmd-print-width
+        try:
+            cmd_print_width = (80 if ns.cmd_print_width is None
+                               else int(ns.cmd_print_width))
+            if cmd_print_width < 5:
+                raise ValueError
+        except ValueError:
+            raise BscanConfigError(
+                'Invalid `--cmd-print-width` value specified; must be an '
+                'integer greater than or equal to 5')
+        db['cmd-print-width'] = cmd_print_width
+
         # --max-concurrency
         try:
             db['max-concurrency'] = (0 if ns.max_concurrency is None
@@ -186,7 +198,8 @@ def get_db_value(key: str) -> Any:
 
 async def proc_spawn(target: str, cmd: str) -> AsyncGenerator[str, None]:
     """Asynchronously yield lines from stdout of a spawned subprocess."""
-    print_i_d3(target, ': spawning subprocess ', shortened_cmd(cmd))
+    cmd_len = get_db_value('cmd-print-length')
+    print_i_d3(target, ': spawning subprocess ', shortened_cmd(cmd, cmd_len))
     proc = await asyncio.create_subprocess_shell(
         cmd,
         stdout=asyncio.subprocess.PIPE,
@@ -201,7 +214,7 @@ async def proc_spawn(target: str, cmd: str) -> AsyncGenerator[str, None]:
 
     exit_code = await proc.wait()
     if exit_code != 0:
-        print_w_d3(target, ': subprocess ', shortened_cmd(cmd),
+        print_w_d3(target, ': subprocess ', shortened_cmd(cmd, cmd_len),
                    ' exited with non-zero exit code of ', exit_code)
     await remove_running_subproc(target, cmd)
 
@@ -270,6 +283,7 @@ async def status_update_poller() -> None:
     """Coroutine for periodically printing updates about the scan status."""
     interval = get_db_value('status-interval')
     verbose = get_db_value('verbose-status')
+    cmd_len = get_db_value('cmd-print-length')
     if interval <= 0:
         raise BscanInternalError(
             'Attempted status update polling with non-positive interval of ' +
@@ -292,7 +306,8 @@ async def status_update_poller() -> None:
                 print_i_d2(msg, ', listed below')
                 for target in sorted(_get_active_targets()):
                     for subproc_cmd in _get_subproc_set(target):
-                        print_i_d3(target, ': ', shortened_cmd(subproc_cmd))
+                        print_i_d3(target, ': ',
+                                   shortened_cmd(subproc_cmd, cmd_len))
             else:
                 print_i_d2(msg)
 
