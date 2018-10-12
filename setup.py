@@ -28,7 +28,10 @@ setup(
     packages=find_packages(exclude=['tests', '*.tests', '*.tests.*']),
     include_package_data=True,
     entry_points={
-        'console_scripts': ['bscan = bscan.__main__:main']
+        'console_scripts': [
+            'bscan = bscan.__main__:main',
+            'bscan-wordlists = bscan.__main__:wordlists_main'
+        ]
     },
     classifiers=[
         'Environment :: Console',

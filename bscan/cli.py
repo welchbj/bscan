@@ -8,7 +8,9 @@ from argparse import (
     Namespace,
     RawTextHelpFormatter)
 from colorama import init as init_colorama
-from typing import List
+from typing import (
+    List,
+    Optional)
 
 from bscan.errors import (
     BscanConfigError,
@@ -38,11 +40,11 @@ from bscan.runtime import (
 from bscan.version import __version__
 
 
-def get_parsed_args(args: List[str]=None) -> Namespace:
+def get_parsed_args(args: Optional[List[str]]=None) -> Namespace:
     """Get the parsed command-line arguments.
 
     Args:
-        args: Arguments to use in place of ``sys.argv``.
+        args: Arguments to use in place of `sys.argv`.
 
     """
     parser = ArgumentParser(
@@ -180,7 +182,7 @@ def get_parsed_args(args: List[str]=None) -> Namespace:
     return parser.parse_args(args)
 
 
-async def main(args: List[str]=None) -> int:
+async def main(args: Optional[List[str]]=None) -> int:
     """Main entry point for `bscan`'s command-line interface.
 
     Args:
