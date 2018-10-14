@@ -9,10 +9,17 @@ An asynchronous network scanning, enumeration, and recommendation tool.
 
 ## Synopsis
 
-`bscan` is a command-line utility to perform active information gathering and service enumeration. It is intended for educational purposes and events such as CTFs only and should never be run on machines and/or networks without explicit prior consent. At its core, `bscan` asynchronously spawns processes of well-known scanning utilities such as `nmap` and `unicornscan`, parses their results, and packages it for you as console output and a well-defined directory structure. While `bscan` was written to be run on [Kali Linux](https://www.kali.org/), there is nothing inherently preventing it from running on any OS with the appropriate tools installed.
+`bscan` is a command-line utility to perform active information gathering and service enumeration. At its core, `bscan` asynchronously spawns processes of well-known scanning utilities such as `nmap` and `unicornscan`, parses their results, and packages it for you as console output and a well-defined directory structure.
+
+
+## License
+
+`bscan` is intended for educational purposes and events such as CTFs only and should never be run on machines and/or networks without explicit prior consent. This code is released under the [MIT license](https://opensource.org/licenses/MIT).
 
 
 ## Installation
+
+`bscan` was written to be run on [Kali Linux](https://www.kali.org/), but there is nothing inherently preventing it from running on any OS with the appropriate tools installed.
 
 Download the latest packaged version from PyPI:
 ```sh
