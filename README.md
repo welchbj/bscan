@@ -64,7 +64,7 @@ $ bscan-wordlists --find "*win*"
 /usr/share/seclists/Passwords/common-passwords-win.txt
 ```
 
-To print all wordlists found on your system, use `bscan --list`.
+To print all wordlists found on your system, use `bscan-wordlists --list`.
 
 
 ## Detailed Options
