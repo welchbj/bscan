@@ -17,6 +17,7 @@ from bscan.errors import (
     BscanError,
     BscanForceSkipTarget,
     BscanForceSilentExit,
+    BscanInternalError,
     BscanSubprocessError)
 from bscan.io import (
     blue,
@@ -260,10 +261,13 @@ async def main(args: Optional[List[str]]=None) -> int:
     except BscanConfigError as e:
         print_e_d1('Configuration error: ', e.message)
         return 1
+    except BscanForceSilentExit as e:
+        return 1
+    except BscanInternalError as e:
+        print_e_d1('Internal error: ', e.message)
+        return 1
     except BscanSubprocessError as e:
         print_e_d1('Error handling subprocess: ', e.message)
-        return 1
-    except BscanForceSilentExit as e:
         return 1
     except BscanError as e:
         print_e_d1('This should not be reached!')
