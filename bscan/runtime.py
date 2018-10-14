@@ -213,7 +213,7 @@ def get_db_value(key: str) -> Any:
 
 async def proc_spawn(target: str, cmd: str) -> AsyncGenerator[str, None]:
     """Asynchronously yield lines from stdout of a spawned subprocess."""
-    cmd_len = get_db_value('cmd-print-length')
+    cmd_len = get_db_value('cmd-print-width')
     print_i_d3(target, ': spawning subprocess ', shortened_cmd(cmd, cmd_len))
     proc = await asyncio.create_subprocess_shell(
         cmd,
@@ -298,7 +298,7 @@ async def status_update_poller() -> None:
     """Coroutine for periodically printing updates about the scan status."""
     interval = get_db_value('status-interval')
     verbose = get_db_value('verbose-status')
-    cmd_len = get_db_value('cmd-print-length')
+    cmd_len = get_db_value('cmd-print-width')
     if interval <= 0:
         raise BscanInternalError(
             'Attempted status update polling with non-positive interval of ' +
