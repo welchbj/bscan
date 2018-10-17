@@ -1,11 +1,28 @@
-# ![bscan](https://raw.githubusercontent.com/welchbj/bscan/master/static/logo.png)
+<p align="center">
+  <img width="350" height="200" src="https://raw.githubusercontent.com/welchbj/bscan/master/static/logo.png" alt="bscan">
+</p>
+<p align="center">
+  <em>an asynchronous target enumeration tool</em>
+</p>
+<p align="center">
+  <a href="https://travis-ci.org/welchbj/bscan">
+    <img src="https://img.shields.io/travis/welchbj/bscan/master.svg?style=flat-square&label=travis" alt="travis status">
+  </a>
+  <a href="https://pypi.org/project/bscan/">
+    <img src="https://img.shields.io/pypi/v/bscan.svg?style=flat-square&label=pypi" alt="pypi">
+  </a>
+  <a href="https://www.kali.org/">
+    <img src="https://img.shields.io/badge/built%20for-kali-2a98ed.svg?style=flat-square" alt="built for kali linux">
+  </a>
+</p>
 
-[![Travis Status](https://img.shields.io/travis/welchbj/bscan/master.svg?style=flat-square&label=travis)](https://travis-ci.org/welchbj/bscan) [![PyPI](https://img.shields.io/pypi/v/bscan.svg?style=flat-square&label=pypi)](https://pypi.org/project/bscan/) [![Python Versions](https://img.shields.io/badge/python-3.6-c944ff.svg?style=flat-square)](https://pypi.org/project/bscan/) [![Built for Kali](https://img.shields.io/badge/built%20for-kali-2a98ed.svg?style=flat-square)](https://www.kali.org/)
+<p align="center">
+  <a href="https://asciinema.org/a/205992?autoplay=1&speed=3">
+    <img src="https://asciinema.org/a/205992.png" width="544"/>
+  </a>
+</p>
 
-An asynchronous network scanning, enumeration, and recommendation tool.
-
-<a href="https://asciinema.org/a/205992?autoplay=1&speed=3"><img src="https://asciinema.org/a/205992.png" width="544"/></a>
-
+---
 
 ## Synopsis
 
