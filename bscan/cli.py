@@ -8,6 +8,7 @@ from argparse import (
     Namespace,
     RawTextHelpFormatter)
 from colorama import init as init_colorama
+from sublemon import Sublemon
 from typing import (
     List,
     Optional)
@@ -20,13 +21,10 @@ from bscan.errors import (
     BscanInternalError,
     BscanSubprocessError)
 from bscan.io import (
-    blue,
+    print_color_info,
     print_e_d1,
     print_i_d1,
-    print_w_d1,
-    purple,
-    red,
-    yellow)
+    print_w_d1)
 from bscan.networks import (
     is_valid_hostname,
     is_valid_ip_host_addr,
@@ -35,7 +33,6 @@ from bscan.scans import scan_target
 from bscan.structure import create_dir_skeleton
 from bscan.runtime import (
     init_db,
-    init_subproc_set,
     get_db_value,
     good_py_version,
     py_version_str,
@@ -91,8 +88,8 @@ def get_parsed_args(args: Optional[List[str]]=None) -> Namespace:
         '--max-concurrency',
         action='store',
         metavar='I',
-        help='maximum integer number of subprocesses to run at a time;\n'
-             'a non-positive value indicates an unbounded max')
+        help='maximum integer number of subprocesses permitted to be \n'
+             'running at a single time (defaults to 20)')
 
     parser.add_argument(
         '--no-program-check',
@@ -204,60 +201,64 @@ async def main(args: Optional[List[str]]=None) -> int:
 
         opts = get_parsed_args(args)
         print_i_d1('Initializing configuration from command-line arguments')
-        await init_db(opts)
+        mc = opts.max_concurrency
+        try:
+            mc = (20 if mc is None else int(mc))
+            if mc < 1:
+                raise ValueError
+        except ValueError:
+            raise BscanConfigError(
+                'Invalid `--max-concurrency` positive integer value '
+                'received: ' + str(mc))
 
-        print_i_d1('Colors: ', blue('info'), ', ', yellow('warnings'), ', ',
-                   red('errors'), ', and ', purple('pattern matches'), sep='')
+        async with Sublemon(max_concurrency=mc) as subl:
+            await init_db(opts, subl)
 
-        if not opts.targets:
-            print_e_d1('No targets specified; use `--help` to figure out what '
-                       'you\'re doing')
-            return 1
+            print_color_info()
 
-        # TODO: create a full list of targets from network address and
-        #       --ping-sweep filtering
-        targets = []
-        for candidate in opts.targets:
-            if is_valid_ip_host_addr(candidate):
-                pass
-            elif is_valid_hostname(candidate):
-                pass
-            elif is_valid_ip_net_addr(candidate):
-                print_w_d1('Network scanning not yet supported; '
-                           'skipping network: ', candidate)
-                continue
-            else:
-                print_e_d1('Unable to parse target ', candidate,
-                           ', skipping it')
-                continue
+            if not opts.targets:
+                print_e_d1('No targets specified; use `--help` to figure '
+                           'out what you\'re doing')
+                return 1
 
-            try:
-                create_dir_skeleton(candidate)
-            except BscanForceSkipTarget as e:
-                print_e_d1(e.message)
-                print_e_d1(candidate, ': skipping this target')
-                continue
+            # TODO: create a full list of targets from network address and
+            #       --ping-sweep filtering
+            targets = []
+            for candidate in opts.targets:
+                if is_valid_ip_host_addr(candidate):
+                    pass
+                elif is_valid_hostname(candidate):
+                    pass
+                elif is_valid_ip_net_addr(candidate):
+                    print_w_d1('Network scanning not yet supported; '
+                               'skipping network: ', candidate)
+                    continue
+                else:
+                    print_e_d1('Unable to parse target ', candidate,
+                               ', skipping it')
+                    continue
 
-            targets.append(candidate)
+                try:
+                    create_dir_skeleton(candidate)
+                except BscanForceSkipTarget as e:
+                    print_e_d1(e.message)
+                    print_e_d1(candidate, ': skipping this target')
+                    continue
 
-        if not targets:
-            print_e_d1('No valid targets specified')
-            return 1
+                targets.append(candidate)
 
-        # setup subprocess tracking for each valid target
-        await asyncio.gather(
-            *[init_subproc_set(target) for target in targets])
-        print_i_d1('Initialized subprocess tracking for ', len(targets),
-                   ' targets')
+            if not targets:
+                print_e_d1('No valid targets specified')
+                return 1
 
-        print_i_d1('Kicking off scans of ', len(targets), ' targets')
-        tasks = [scan_target(target) for target in targets]
-        if get_db_value('status-interval') > 0:
-            tasks.append(status_update_poller())
-        await asyncio.gather(*tasks)
+            print_i_d1('Kicking off scans of ', len(targets), ' targets')
+            tasks = [scan_target(target) for target in targets]
+            if get_db_value('status-interval') > 0:
+                tasks.append(status_update_poller())
+            await asyncio.gather(*tasks)
 
-        print_i_d1('Completed execution')
-        return 0
+            print_i_d1('Completed execution')
+            return 0
     except BscanConfigError as e:
         print_e_d1('Configuration error: ', e.message)
         return 1

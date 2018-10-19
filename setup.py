@@ -24,7 +24,7 @@ setup(
     author_email='welch18@vt.edu',
     url='https://github.com/welchbj/bscan',
     license='MIT',
-    install_requires=['colorama', 'toml'],
+    install_requires=['colorama', 'sublemon', 'toml'],
     packages=find_packages(exclude=['tests', '*.tests', '*.tests.*']),
     include_package_data=True,
     entry_points={

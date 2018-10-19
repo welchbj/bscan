@@ -1,3 +1,4 @@
+aiostream==0.3.1
 bleach==3.0.1
 certifi==2018.8.24
 cffi==1.11.5
@@ -20,6 +21,7 @@ readme-renderer==22.0
 requests==2.19.1
 requests-toolbelt==0.8.0
 six==1.11.0
+sublemon==0.0.1
 toml==0.9.6
 tqdm==4.26.0
 twine==1.12.1
