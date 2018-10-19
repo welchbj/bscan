@@ -1,0 +1,44 @@
+# configuration of quick and thorough port scans, including regexes for
+# parsing active ports; specified regexes must return the integer port number
+#
+# when scan method is not specified via command-line options, the default
+# key from each respective table will be used to select the scan
+#
+# IMPORTANT NOTES:
+# all defined regex patterns MUST name their port and service match groups
+# via Python's matching ability with: `?P<port>` and `?P<name>`
+#
+# in contrast to scan definitons in the service-scans.toml file, all defined
+# scans in this file MUST be valid Python format strings which include the
+# {target} and {fout} parameters
+
+[quick]
+  default = 'unicornscan'
+
+  [quick.unicornscan]
+    scan = 'unicornscan {target} 2>&1 | tee "{fout}"'
+    pattern = '^TCP open(\s*)(?P<name>[\w-]+)\[(\s*)(?P<port>\d+)\](.*)$'
+
+  [quick.nmap]
+    scan = 'nmap -vv -Pn -sC -sV --top-ports 1000 {target} -oN "{fout}" 2>&1'
+    pattern = '^(?P<port>\d+)/tcp(.*)open(\s*)(?P<name>[\w-]+)(\s*)(.*)$'
+
+
+[thorough]
+  default = 'nmap'
+
+  [thorough.unicornscan]
+    scan = 'unicornscan -p a {target} 2>&1 | tee "{fout}"'
+    pattern = '^TCP open(\s*)(?P<name>[\w-]+)\[(\s*)(?P<port>\d+)\](.*)$'
+
+  [thorough.nmap]
+    scan = 'nmap -vv -Pn -sS -sC -A -p- -T4 {target} -oN "{fout}" 2>&1'
+    pattern = '^(?P<port>\d+)/tcp(.*)open(\s*)(?P<name>[\w-]+)(\s*)(.*)$'
+
+
+[udp]
+  default = 'nmap'
+
+  [udp.nmap]
+    scan = 'nmap -vv -Pn -sC -sV sU {target} -oN "{fout}" 2>&1'
+    pattern = '^(?P<port>\d+)/udp(.*)open(\s*)(?P<name>[\w-]+)(\s*)(.*)$'
