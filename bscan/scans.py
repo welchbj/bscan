@@ -2,6 +2,9 @@
 
 import re
 
+from asyncio import (
+    ensure_future,
+    gather)
 from itertools import chain
 from functools import partial
 from typing import (
@@ -23,10 +26,10 @@ from bscan.models import (
     DetectedService,
     ParsedService)
 from bscan.runtime import (
-    gather_throttled,
+    add_active_target,
     get_db_value,
     proc_spawn,
-    remove_subproc_set)
+    remove_active_target)
 from bscan.structure import (
     get_recommendations_txt_file,
     get_scan_file)
@@ -51,26 +54,28 @@ NMAP_UDP_SCAN = (
 async def scan_target(target: str) -> None:
     """Run quick, thorough, and service scans on a target."""
     do_thorough = not get_db_value('quick-only')
+    await add_active_target(target)
 
-    # run quick scan
+    # block on the initial quick scan
     qs_parsed_services = await run_qs(target)
     qs_unmatched_services, qs_joined_services = \
         join_services(target, qs_parsed_services)
     _print_matched_services(target, qs_joined_services)
     _print_unmatched_services(target, qs_unmatched_services)
 
-    # run the ts and scans based on qs-found ports
-    scan_cmds: List[List[str]] = \
+    # schedule service scans based on qs-found ports
+    qs_s_scan_cmds: List[List[str]] = \
         [js.build_scans() for js in qs_joined_services]
-    scans: List[Coroutine[Any, Any, Any]] = \
-        [run_service_s(target, cmd) for cmd in chain(*scan_cmds)]
+    qs_s_scans: List[Coroutine[Any, Any, Any]] = \
+        [run_service_s(target, cmd) for cmd in chain(*qs_s_scan_cmds)]
+    qs_s_scan_tasks = [ensure_future(scan) for scan in qs_s_scans]
+
+    # block on the thorough scan, if enabled
     if do_thorough:
-        scans.append(run_nmap_ts(target))
+        ts_parsed_services: Set[ParsedService] = await run_nmap_ts(target)
     else:
+        ts_parsed_services = set()
         print_i_d2(target, ': skipping thorough scan')
-    async for res in gather_throttled(*scans):
-        pass
-    ts_parsed_services: Set[ParsedService] = res[-1] if do_thorough else set()
 
     # diff open ports between quick and thorough scans
     new_services: Set[ParsedService] = ts_parsed_services - qs_parsed_services
@@ -80,10 +85,10 @@ async def scan_target(target: str) -> None:
             join_services(target, new_services)
         _print_matched_services(target, ts_joined_services)
         _print_unmatched_services(target, ts_unmatched_services)
-        scan_cmds = [js.build_scans() for js in ts_joined_services]
-        scans = [run_service_s(target, cmd) for cmd in chain(*scan_cmds)]
-        async for res in gather_throttled(*scans):
-            pass
+        ts_s_scan_cmds = [js.build_scans() for js in ts_joined_services]
+        ts_s_scans = [run_service_s(target, cmd) for
+                      cmd in chain(*ts_s_scan_cmds)]
+        ts_s_scan_tasks = [ensure_future(scan) for scan in ts_s_scans]
     elif do_thorough:
         print_i_d2(target, ': thorough scan discovered no additional '
                    'services')
@@ -110,9 +115,10 @@ async def scan_target(target: str) -> None:
                 fprint(rec)
             fprint()
 
-    # remove subprocess tracking for this target; note that initialization
-    # of this tracking is performed in the main cli routine
-    await remove_subproc_set(target)
+    # block on any pending service scan tasks
+    await gather(*chain(qs_s_scan_tasks, ts_s_scan_tasks))
+
+    await remove_active_target(target)
 
 
 async def run_qs(target: str) -> Set[ParsedService]:

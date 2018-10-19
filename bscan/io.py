@@ -48,6 +48,11 @@ print_w_d3 = partial(print, yellow('    [W] '), sep='')
 print_e_d3 = partial(print, red('    [E] '), sep='')
 
 
+def print_color_info():
+    print_i_d1('Colors: ', blue('info'), ', ', yellow('warnings'), ', ',
+               red('errors'), ', and ', purple('pattern matches'), sep='')
+
+
 def path_exists(path: str) -> bool:
     """Return whether the specified path leads to a file or directory."""
     return Path(path).exists()

@@ -11,11 +11,11 @@ from argparse import Namespace
 from asyncio import Lock
 from collections import namedtuple
 from pkg_resources import resource_string
+from sublemon import Sublemon
 from typing import (
     Any,
     AsyncGenerator,
-    Dict,
-    Set)
+    Dict)
 
 from bscan.errors import (
     BscanConfigError,
@@ -63,9 +63,15 @@ def load_config_file(filename: str) -> str:
     return raw_contents.decode('utf-8')
 
 
-async def init_db(ns: Namespace) -> None:
+async def init_db(ns: Namespace, subl: Sublemon) -> None:
     """Init configuration from default files and command-line arguments."""
     async with lock:
+        # track subprocess-management server
+        db['sublemon'] = subl
+
+        # track targets being actively scanned
+        db['active-targets'] = set()
+
         # --brute-pass-list
         if ns.brute_pass_list is None:
             db['brute-pass-list'] = '/usr/share/wordlists/fasttrack.txt'
@@ -98,15 +104,6 @@ async def init_db(ns: Namespace) -> None:
                 'Invalid `--cmd-print-width` value specified; must be an '
                 'integer greater than or equal to 5')
         db['cmd-print-width'] = cmd_print_width
-
-        # --max-concurrency
-        try:
-            db['max-concurrency'] = (0 if ns.max_concurrency is None
-                                     else int(ns.max_concurrency))
-        except ValueError:
-            raise BscanConfigError(
-                'Invalid `--max-concurrency` integer specified: ' +
-                str(ns.max_concurrency))
 
         # --output-dir
         if ns.output_dir is None:
@@ -211,87 +208,43 @@ def get_db_value(key: str) -> Any:
             'Attempted to access unknown database key')
 
 
+async def add_active_target(target: str) -> None:
+    """Add the specified target as being currently-scanned."""
+    target_set = db['active-targets']
+    if target in target_set:
+        raise BscanInternalError(
+            'Attempted to add already-active target ' + target + ' to set of '
+            'actively-scanned targets')
+
+    async with lock:
+        target_set.add(target)
+
+
+async def remove_active_target(target: str) -> None:
+    """Remove the specified target as being currently-scanned."""
+    target_set = db['active-targets']
+    if target not in target_set:
+        raise BscanInternalError(
+            'Attempted to remove non-active target ' + target + ' from set ' +
+            'of actively-scanned targets')
+
+    async with lock:
+        target_set.remove(target)
+
+
 async def proc_spawn(target: str, cmd: str) -> AsyncGenerator[str, None]:
     """Asynchronously yield lines from stdout of a spawned subprocess."""
     cmd_len = get_db_value('cmd-print-width')
+    subl = get_db_value('sublemon')
     print_i_d3(target, ': spawning subprocess ', shortened_cmd(cmd, cmd_len))
-    proc = await asyncio.create_subprocess_shell(
-        cmd,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE)
-    await add_running_subproc(target, cmd)
-
-    # must ignore typing below because __aiter__ and __anext__ are defined
-    # for asyncio.streams.StreamReader based on Python being >= 3.5
-    # see: https://github.com/python/cpython/blob/64bcedce8d61e1daa9ff7980cc07988574049b1f/Lib/asyncio/streams.py#L685-L695  # noqa
-    async for line in proc.stdout:  # type: ignore
+    sp, = subl.spawn(cmd)
+    async for line in sp.stdout:
         yield line.decode('utf-8').strip()
 
-    exit_code = await proc.wait()
+    exit_code = await sp.wait_done()
     if exit_code != 0:
         print_w_d3(target, ': subprocess ', shortened_cmd(cmd, cmd_len),
                    ' exited with non-zero exit code of ', exit_code)
-    await remove_running_subproc(target, cmd)
-
-
-async def gather_throttled(*aws):
-    """Run specified awaitables as per configured max-concurrency."""
-    batch_size = get_db_value('max-concurrency')
-    if batch_size < 1 or batch_size >= len(aws):
-        yield await asyncio.gather(*aws)
-    else:
-        batched_aws = [aws[i:i+batch_size] for
-                       i in range(0, len(aws), batch_size)]
-        for batch in batched_aws:
-            yield await asyncio.gather(*batch)
-
-
-async def init_subproc_set(target: str) -> None:
-    """Initialize a list for tracking subprocesses related to a target."""
-    subproc_dict = db['subprocesses']
-    if target in subproc_dict:
-        raise BscanInternalError(
-            'Attempted to initialize existing subprocess set entry for '
-            'target ' + target)
-
-    async with lock:
-        subproc_dict[target] = set()
-
-
-async def remove_subproc_set(target: str) -> None:
-    """Remove the set of subprocesses related to a target."""
-    subproc_dict = db['subprocesses']
-    if target not in subproc_dict:
-        raise BscanInternalError(
-            'Attempted to remove non-existent subprocess set for target ' +
-            target)
-
-    async with lock:
-        subproc_dict.pop(target)
-
-
-async def add_running_subproc(target: str, cmd: str) -> None:
-    """Add a subprocess to the set associateed with a target."""
-    subproc_set = _get_subproc_set(target)
-    if cmd in subproc_set:
-        raise BscanInternalError(
-            'Attempted to add already-running subprocess `' + cmd +
-            '` for target ' + target)
-
-    async with lock:
-        subproc_set.add(cmd)
-
-
-async def remove_running_subproc(target: str, cmd: str) -> None:
-    """Remove a subprocess from the set associated with a target."""
-    subproc_set = _get_subproc_set(target)
-    if cmd not in subproc_set:
-        raise BscanInternalError(
-            'Attempted to remove non-existent subprocess `' + cmd +
-            '` for target ' + target)
-
-    async with lock:
-        subproc_set.remove(cmd)
 
 
 async def status_update_poller() -> None:
@@ -306,11 +259,12 @@ async def status_update_poller() -> None:
 
     time_elapsed = float(0)
     while True:
+        await asyncio.sleep(_STATUS_POLL_PERIOD)
+
         stats: RuntimeStats = get_runtime_stats()
         if stats.num_active_targets < 1:
             break
 
-        await asyncio.sleep(_STATUS_POLL_PERIOD)
         time_elapsed += _STATUS_POLL_PERIOD
         if time_elapsed >= interval:
             time_elapsed = float(0)
@@ -318,35 +272,16 @@ async def status_update_poller() -> None:
                    ' spawned subprocess(es) currently running across ' +
                    str(stats.num_active_targets) + ' target(s)')
             if verbose:
+                subl = db['sublemon']
                 print_i_d2(msg, ', listed below')
-                for target in sorted(_get_active_targets()):
-                    for subproc_cmd in _get_subproc_set(target):
-                        print_i_d3(target, ': ',
-                                   shortened_cmd(subproc_cmd, cmd_len))
+                for sp in subl.running_subprocesses:
+                    print_i_d3(shortened_cmd(sp.cmd, cmd_len))
             else:
                 print_i_d2(msg)
 
 
 def get_runtime_stats() -> RuntimeStats:
     """Computer and return the runtime statistics object."""
-    subproc_dict = db['subprocesses']
-    num_active_targets = len(subproc_dict.keys())
-    num_total_subprocs = sum(len(s) for _, s in subproc_dict.items())
     return RuntimeStats(
-        num_active_targets,
-        num_total_subprocs)
-
-
-def _get_active_targets() -> Set[str]:
-    """Get the set of targets being actively scanned."""
-    return set(db['subprocesses'].keys())
-
-
-def _get_subproc_set(target: str) -> Set[str]:
-    """Ensure and return a subprocess set for a target."""
-    if target not in db['subprocesses']:
-        raise BscanInternalError(
-            'Attempted to access uninitialized subprocess set for target ' +
-            target)
-
-    return db['subprocesses'][target]
+        len(db['active-targets']),
+        len(db['sublemon'].running_subprocesses))
