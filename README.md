@@ -73,6 +73,7 @@ What's going on here?
 `bscan` also relies on some additional configuration files. The default files can be found in the [`bscan/configuation`](bscan/configuration) directory and serve the following purposes:
 * [`patterns.txt`](bscan/configuration/patterns.txt) specifies the regex patterns to be highlighted in console output when matched with scan output
 * [`required-programs.txt`](bscan/configuration/required-programs.txt) specifies the installed programs that `bscan` plans on using
+* [`port-scans.toml`](bscan/configuration/port-scans.toml) defines the port-discovering scans to be run on the target(s), as well as the regular expressions used to parse port numbers and service names from scan output
 * [`service-scans.toml`](bscan/configuration/service-scans.toml) defines the scans be run on the target(s) on a per-service basis
 
 `bscan` also ships with a helper program `bscan-wordlists`, which can be used to list available wordlists on your system. Here's a simple example:
