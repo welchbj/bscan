@@ -14,8 +14,10 @@
   <a href="https://www.kali.org/">
     <img src="https://img.shields.io/badge/built%20for-kali-2a98ed.svg?style=flat-square" alt="built for kali linux">
   </a>
+  <a href="https://www.python.org/">
+    <img src="https://img.shields.io/badge/python-3.6+-b042f4.svg?style=flat-square" alt="python version">
+  </a>
 </p>
-
 <p align="center">
   <a href="https://asciinema.org/a/205992?autoplay=1&speed=3">
     <img src="https://asciinema.org/a/205992.png" width="750"/>
