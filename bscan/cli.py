@@ -160,6 +160,7 @@ def get_parsed_args(args: Optional[List[str]]=None) -> Namespace:
     parser.add_argument(
         '--udp-method',
         action='store',
+        metavar='S',
         help='the method for performing the UDP port scan; must correspond\n'
              'to a configured port scan')
 
