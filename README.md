@@ -28,7 +28,7 @@
 
 ## Synopsis
 
-`bscan` is a command-line utility to perform active information gathering and service enumeration. At its core, `bscan` asynchronously spawns processes of well-known scanning utilities such as `nmap` and `unicornscan`, parses their results, and packages it for you as console output and a well-defined directory structure.
+`bscan` is a command-line utility to perform active information gathering and service enumeration. At its core, `bscan` asynchronously spawns processes of well-known scanning utilities, repurposing scan results into highlighted console output and a well-defined directory structure.
 
 
 ## License
