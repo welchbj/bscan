@@ -149,8 +149,8 @@ async def init_db(ns: Namespace, subl: Sublemon) -> None:
                 'Invalid --quick-scan option; must be either '
                 '`unicornscan` or `nmap`')
 
-        # load service information from `configuration/services.toml`
-        db['services'] = toml.loads(load_config_file('services.toml'))
+        # load service information from `configuration/service-scans.toml`
+        db['services'] = toml.loads(load_config_file('service-scans.toml'))
 
         # --status-interval
         try:
