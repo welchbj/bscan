@@ -99,7 +99,7 @@ usage: bscan [OPTIONS] targets
 | |_) \__ \ (__ (_| | | | |
 |_.__/|___/\___\__,_|_| |_|
 
-An asynchronous service enumeration tool
+an asynchronous service enumeration tool
 
 positional arguments:
   targets               the targets and/or networks on which to perform enumeration
@@ -108,25 +108,29 @@ optional arguments:
   -h, --help            show this help message and exit
   --brute-pass-list F   filename of password list to use for brute-forcing
   --brute-user-list F   filename of user list to use for brute-forcing
-  --cmd-print-width I   the maximum integer number of characters allowed when
-                        printing a running subprocess
+  --cmd-print-width I   the maximum integer number of characters allowed when printing
+                        the command used to spawn a running subprocess (defaults to 80)
   --hard                force overwrite of existing directories
-  --max-concurrency I   maximum integer number of subprocesses to run at a time;
-                        a non-positive value indicates an unbounded max
-  --no-program-check    disable ensuring the presence of required system programs
+  --max-concurrency I   maximum integer number of subprocesses permitted to be running
+                        concurrently (defaults to 20)
+  --no-program-check    disable checking the presence of required system programs
   --no-file-check       disable checking the presence of files such as configured
                         wordlists
   --output-dir D        the base directory in which to write output files
   --patterns [ [ ...]]  regex patterns to highlight in output text
-  --status-interval I   integer number of seconds to pause in between printing
-                        status updates; a non-positive value disables updates
-  --ping-sweep          whether to filter hosts from a network via a ping sweep before
-                        more intensive scans
+  --ping-sweep          enable ping sweep filtering of hosts from a network range
+                        before running more intensive scans
   --quick-only          whether to only run the quick scan (and not include the
                         thorough scan over all ports)
-  --quick-scan QS       the method for peforming the initial port scan:
-                        `unicornscan` or `nmap`
+  --qs-method S         the method for performing the initial TCP port scan; must
+                        correspond to a configured port scan
+  --status-interval I   integer number of seconds to pause in between printing status
+                        updates; a non-positive value disables updates (defaults to 30)
+  --ts-method S         the method for performing the thorough TCP port scan; must
+                        correspond to a configured port scan
   --udp                 whether to run UDP scans
+  --udp-method S        the method for performing the UDP port scan; must correspond
+                        to a configured port scan
   --verbose-status      whether to print verbose runtime status updates, based on
                         frequency specified by `--status-interval` flag
   --version             program version

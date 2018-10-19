@@ -56,7 +56,7 @@ def get_parsed_args(args: Optional[List[str]]=None) -> Namespace:
             "| '_ \/ __|/ __/ _` | '_ \\\n"
             "| |_) \__ \ (__ (_| | | | |\n"
             "|_.__/|___/\___\__,_|_| |_|\n\n"
-            'An asynchronous service enumeration tool'),
+            'an asynchronous service enumeration tool'),
         formatter_class=RawTextHelpFormatter)
 
     parser.add_argument(
@@ -75,8 +75,8 @@ def get_parsed_args(args: Optional[List[str]]=None) -> Namespace:
         '--cmd-print-width',
         action='store',
         metavar='I',
-        help='the maximum integer number of characters allowed when\n'
-             'printing a running subprocess')
+        help='the maximum integer number of characters allowed when printing\n'
+             'the command used to spawn a running subprocess (defaults to 80)')
 
     parser.add_argument(
         '--hard',
@@ -88,14 +88,14 @@ def get_parsed_args(args: Optional[List[str]]=None) -> Namespace:
         '--max-concurrency',
         action='store',
         metavar='I',
-        help='maximum integer number of subprocesses permitted to be \n'
-             'running at a single time (defaults to 20)')
+        help='maximum integer number of subprocesses permitted to be running\n'
+             'concurrently (defaults to 20)')
 
     parser.add_argument(
         '--no-program-check',
         action='store_true',
         default=False,
-        help='disable ensuring the presence of required system programs')
+        help='disable checking the presence of required system programs')
 
     parser.add_argument(
         '--no-file-check',
@@ -118,17 +118,10 @@ def get_parsed_args(args: Optional[List[str]]=None) -> Namespace:
         help='regex patterns to highlight in output text')
 
     parser.add_argument(
-        '--status-interval',
-        action='store',
-        metavar='I',
-        help='integer number of seconds to pause in between printing\n'
-             'status updates; a non-positive value disables updates')
-
-    parser.add_argument(
         '--ping-sweep',
         action='store_true',
-        help='whether to filter hosts from a network via a ping sweep before\n'
-             'more intensive scans')
+        help='enable ping sweep filtering of hosts from a network range\n'
+             'before running more intensive scans')
 
     parser.add_argument(
         '--quick-only',
@@ -143,6 +136,13 @@ def get_parsed_args(args: Optional[List[str]]=None) -> Namespace:
         metavar='S',
         help='the method for performing the initial TCP port scan; must\n'
              'correspond to a configured port scan')
+
+    parser.add_argument(
+        '--status-interval',
+        action='store',
+        metavar='I',
+        help='integer number of seconds to pause in between printing status\n'
+             'updates; a non-positive value disables updates (defaults to 30)')
 
     parser.add_argument(
         '--ts-method',
