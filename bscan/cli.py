@@ -138,18 +138,30 @@ def get_parsed_args(args: Optional[List[str]]=None) -> Namespace:
              'thorough scan over all ports)')
 
     parser.add_argument(
-        '--quick-scan',
+        '--qs-method',
         action='store',
-        default='unicornscan',
-        metavar='QS',
-        help='the method for peforming the initial port scan:\n'
-             '`unicornscan` or `nmap`')
+        metavar='S',
+        help='the method for performing the initial TCP port scan; must\n'
+             'correspond to a configured port scan')
+
+    parser.add_argument(
+        '--ts-method',
+        action='store',
+        metavar='S',
+        help='the method for performing the thorough TCP port scan; must\n'
+             'correspond to a configured port scan')
 
     parser.add_argument(
         '--udp',
         action='store_true',
         default=False,
         help='whether to run UDP scans')
+
+    parser.add_argument(
+        '--udp-method',
+        action='store',
+        help='the method for performing the UDP port scan; must correspond\n'
+             'to a configured port scan')
 
     parser.add_argument(
         '--verbose-status',

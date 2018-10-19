@@ -11,6 +11,7 @@ from typing import (
     Any,
     Coroutine,
     List,
+    Pattern,
     Set,
     Tuple)
 
@@ -18,7 +19,6 @@ from bscan.io import (
     blue,
     print_i_d2,
     print_i_d3,
-    print_w_d1,
     print_w_d3,
     purple,
     yellow)
@@ -33,22 +33,6 @@ from bscan.runtime import (
 from bscan.structure import (
     get_recommendations_txt_file,
     get_scan_file)
-
-UNIC_QUICK_SCAN = (
-   'unicornscan {target} 2>&1 | tee "{fout}"')
-"""TCP connect() and SYN scans on most common ports."""
-
-NMAP_QUICK_SCAN = (
-    'nmap -vv -Pn -sC -sV --top-ports 1000 {target} -oN "{fout}" 2>&1')
-"""TCP connect() scan and service discovery on most common ports."""
-
-NMAP_TCP_SCAN = (
-    'nmap -vv -Pn -sS -sC -A -p- -T4 {target} -oN "{fout}" 2>&1')
-"""TCP SYN and connect() scans (aggressively) on all TCP ports."""
-
-NMAP_UDP_SCAN = (
-    'nmap -vv -Pn -sC -sV sU {target} -oN "{fout}" 2>&1')
-"""UDP scan."""
 
 
 async def scan_target(target: str) -> None:
@@ -72,7 +56,7 @@ async def scan_target(target: str) -> None:
 
     # block on the thorough scan, if enabled
     if do_thorough:
-        ts_parsed_services: Set[ParsedService] = await run_nmap_ts(target)
+        ts_parsed_services: Set[ParsedService] = await run_ts(target)
     else:
         ts_parsed_services = set()
         print_i_d2(target, ': skipping thorough scan')
@@ -92,14 +76,9 @@ async def scan_target(target: str) -> None:
     elif do_thorough:
         print_i_d2(target, ': thorough scan discovered no additional '
                    'services')
+        ts_s_scan_tasks = []
 
-    # run UDP scan
-    if get_db_value('udp'):
-        print_w_d1('UDP scan not yet implemented; skipping it')
-        # udp_services = await run_udp_s(target)
-        # TODO: handle UDP results
-
-    # write recommendations file for further manual commands
+    # write recommendations file for further manual TCP commands
     for js in chain(qs_joined_services, ts_joined_services):
         if not js.recommendations:
             continue
@@ -115,6 +94,14 @@ async def scan_target(target: str) -> None:
                 fprint(rec)
             fprint()
 
+    # run UDP scan
+    if get_db_value('udp'):
+        udp_services = await run_udp_s(target)
+        for service in udp_services:
+            print_i_d3(
+                target, ': detected service ', blue(service.name),
+                ' on UDP port ', blue(str(service.port)))
+
     # block on any pending service scan tasks
     await gather(*chain(qs_s_scan_tasks, ts_s_scan_tasks))
 
@@ -122,68 +109,45 @@ async def scan_target(target: str) -> None:
 
 
 async def run_qs(target: str) -> Set[ParsedService]:
-    """Run a quick scan on a target using the configured option."""
-    method = get_db_value('quick-scan')
-    if method == 'unicornscan':
-        return await run_unicornscan_qs(target)
-    else:
-        return await run_nmap_qs(target)
-
-
-async def run_unicornscan_qs(target: str) -> Set[ParsedService]:
-    """Run a quick scan on a target via unicornscan."""
-    print_i_d2(target, ': beginning unicornscan quick scan')
-    services = set()
-
-    unic_cmd = UNIC_QUICK_SCAN.format(
+    """Run a quick scan on a target via the configured method."""
+    print_i_d2(target, ': beginning TCP quick scan')
+    qs_config = get_db_value('quick-scan')
+    cmd = qs_config.scan.format(
         target=target,
-        fout=get_scan_file(target, 'tcp.quick.unicornscan'))
-    async for line in proc_spawn(target, unic_cmd):
-        match_patterns(target, line)
-        if line.startswith('TCP open'):
-            tokens = line.replace('[', ' ').replace(']', ' ').split()
-            name = tokens[2]
-            port = int(tokens[3])
-            services.add(ParsedService(name, port))
-
-    print_i_d2(target, ': finished unicornscan quick scan')
+        fout=get_scan_file(target, 'tcp.quickscan.' + qs_config.name))
+    services = await _parse_port_scan(target, cmd, qs_config.pattern)
+    print_i_d2(target, ': finished TCP quick scan')
     return services
-
-
-async def run_nmap_qs(target: str) -> Set[ParsedService]:
-    """Run a quick scan on a target using Nmap."""
-    raise NotImplementedError
 
 
 async def run_service_s(target: str, cmd: str) -> None:
     """Run an in-depth service scan on the specified target."""
     async for line in proc_spawn(target, cmd):
-        match_patterns(target, line)
+        highlight_patterns(target, line)
 
 
-async def run_nmap_ts(target: str) -> Set[ParsedService]:
-    """Run a thorough TCP scan on a target using Nmap."""
-    print_i_d2(target, ': beginning Nmap TCP thorough scan')
-    services = set()
-
-    nmap_cmd = NMAP_TCP_SCAN.format(
+async def run_ts(target: str) -> Set[ParsedService]:
+    """Run a thorough TCP scan on a target using the configured method."""
+    print_i_d2(target, ': beginning TCP thorough scan')
+    ts_config = get_db_value('thorough-scan')
+    cmd = ts_config.scan.format(
         target=target,
-        fout=get_scan_file(target, 'tcp.thorough.nmap'))
-    async for line in proc_spawn(target, nmap_cmd):
-        match_patterns(target, line)
-        tokens = line.split()
-        if 'Discovered' not in line and '/tcp' in line and 'open' in tokens:
-            name = tokens[2].rstrip('?')
-            port = int(tokens[0].split('/')[0])
-            services.add(ParsedService(name, port))
-
-    print_i_d2(target, ': finished Nmap thorough scan')
+        fout=get_scan_file(target, 'tcp.thorough.' + ts_config.name))
+    services = await _parse_port_scan(target, cmd, ts_config.pattern)
+    print_i_d2(target, ': finished TCP thorough scan')
     return services
 
 
 async def run_udp_s(target: str) -> Set[ParsedService]:
-    """Run a UDP scan on a target using Nmap."""
-    raise NotImplementedError
+    """Run a UDP scan on a target."""
+    print_i_d2(target, ': beginning UDP scan')
+    udp_config = get_db_value('udp-scan')
+    cmd = udp_config.scan.format(
+        target=target,
+        fout=get_scan_file(target, 'udp.' + udp_config.name))
+    services = await _parse_port_scan(target, cmd, udp_config.pattern)
+    print_i_d2(target, ': finished UDP scan')
+    return services
 
 
 def join_services(target: str,
@@ -215,8 +179,8 @@ def join_services(target: str,
     return unmatched_services, joined_services
 
 
-def match_patterns(target: str, line: str) -> None:
-    """Print a string with matched patterns highlighted in purple."""
+def highlight_patterns(target: str, line: str) -> None:
+    """Print a string with configured pattern matches highlighted in purple."""
     patterns = get_db_value('patterns')
     pos = 0
     highlighted_line = ''
@@ -233,12 +197,29 @@ def match_patterns(target: str, line: str) -> None:
             target, ': matched pattern in line `', highlighted_line, '`')
 
 
+async def _parse_port_scan(
+        target: str,
+        cmd: str,
+        pattern: Pattern) -> Set[ParsedService]:
+    """Parse the output of a port scan command."""
+    services = set()
+    async for line in proc_spawn(target, cmd):
+        highlight_patterns(target, line)
+        parse_match = re.search(pattern, line)
+        if parse_match:
+            services.add(
+                ParsedService(
+                    parse_match.group('name'),
+                    int(parse_match.group('port'))))
+    return services
+
+
 def _print_matched_services(target: str,
                             matched_services: List[DetectedService]) -> None:
     """Print information about matched services."""
     for ds in matched_services:
         print_i_d3(target, ': matched service(s) on port(s) ',
-                   blue(ds.port_str()), ' to ', blue(ds.name), ' protocol')
+                   blue(ds.port_str()), ' to ', blue(ds.name))
 
 
 def _print_unmatched_services(target: str,

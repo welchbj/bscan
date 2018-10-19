@@ -37,6 +37,10 @@ DEFAULT_WORDLIST_SEARCH_DIRS = [
     '/usr/share/wordlists/',
     '/usr/share/seclists/Passwords/']
 
+PortScanConfig = namedtuple(
+    'PortScanConfig',
+    ['name', 'pattern', 'scan'])
+
 RuntimeStats = namedtuple(
     'RuntimeStats',
     ['num_active_targets', 'num_total_subprocs'])
@@ -138,19 +142,51 @@ async def init_db(ns: Namespace, subl: Sublemon) -> None:
                     'required programs ' + ', '.join(not_found_progs) +
                     ' could not be found on this system')
 
-        # --quick-scan
-        if ns.quick_scan is None or ns.quick_scan == 'unicornscan':
-            db['quick-scan'] = 'unicornscan'
-        elif ns.quick_scan == 'nmap':
-            raise BscanConfigError(
-                'Nmap quick scan not yet implemented, use `unicornscan`')
-        else:
-            raise BscanConfigError(
-                'Invalid --quick-scan option; must be either '
-                '`unicornscan` or `nmap`')
-
         # load service information from `configuration/service-scans.toml`
         db['services'] = toml.loads(load_config_file('service-scans.toml'))
+
+        # load quick scan method configuration
+        # derived from `--qs-method` + `configuration/port-scans.toml`
+        port_scan_config = toml.loads(load_config_file('port-scans.toml'))
+        qs_config = port_scan_config['quick']
+        qs_method_name = (ns.qs_method if ns.qs_method is not None else
+                          qs_config['default'])
+        if qs_method_name not in qs_config or qs_method_name == 'default':
+            raise BscanConfigError(
+                'Invalid `--qs-method` specified: ' + str(qs_method_name))
+        qs_attrs = qs_config[qs_method_name]
+        db['quick-scan'] = PortScanConfig(
+            qs_method_name,
+            re.compile(qs_attrs['pattern']),
+            qs_attrs['scan'])
+
+        # load thorough scan method configuration
+        # derived from `--ts-method` + `configuration/port-scans.toml`
+        ts_config = port_scan_config['thorough']
+        ts_method_name = (ns.ts_method if ns.ts_method is not None else
+                          ts_config['default'])
+        if ts_method_name not in ts_config or ts_method_name == 'default':
+            raise BscanConfigError(
+                'Invalid `--ts-method` specified: ' + str(ts_method_name))
+        ts_attrs = ts_config[ts_method_name]
+        db['thorough-scan'] = PortScanConfig(
+            ts_method_name,
+            re.compile(ts_attrs['pattern']),
+            ts_attrs['scan'])
+
+        # load udp scan method configuration
+        # derived from `--udp-method` + `configuration/port-scans.toml`
+        udp_config = port_scan_config['udp']
+        udp_method_name = (ns.udp_method if ns.udp_method is not None else
+                           udp_config['default'])
+        if udp_method_name not in udp_config or udp_method_name == 'default':
+            raise BscanConfigError(
+                'Invalid `--udp-method` specified: ' + str(udp_method_name))
+        udp_attrs = udp_config[udp_method_name]
+        db['udp-scan'] = PortScanConfig(
+            udp_method_name,
+            re.compile(udp_attrs['pattern']),
+            udp_attrs['scan'])
 
         # --status-interval
         try:
