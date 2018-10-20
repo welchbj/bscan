@@ -76,16 +76,6 @@ What's going on here?
 * [`port-scans.toml`](bscan/configuration/port-scans.toml) defines the port-discovering scans to be run on the target(s), as well as the regular expressions used to parse port numbers and service names from scan output
 * [`service-scans.toml`](bscan/configuration/service-scans.toml) defines the scans be run on the target(s) on a per-service basis
 
-`bscan` also ships with a helper program `bscan-wordlists`, which can be used to list available wordlists on your system. Here's a simple example:
-```sh
-$ bscan-wordlists --find "*win*"
-/usr/share/wordlists/wfuzz/vulns/dirTraversal-win.txt
-/usr/share/wordlists/metasploit/sensitive_files_win.txt
-/usr/share/seclists/Passwords/common-passwords-win.txt
-```
-
-To print all wordlists found on your system, use `bscan-wordlists --list`.
-
 
 ## Detailed Options
 
