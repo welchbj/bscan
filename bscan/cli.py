@@ -17,6 +17,7 @@ from bscan.config import (
     init_config,
     good_py_version,
     py_version_str)
+from bscan.dir_gen import create_dir_skeleton
 from bscan.errors import (
     BscanConfigError,
     BscanError,
@@ -34,7 +35,6 @@ from bscan.networks import (
     is_valid_ip_host_addr,
     is_valid_ip_net_addr)
 from bscan.scans import scan_target
-from bscan.structure import create_dir_skeleton
 from bscan.runtime import (
     get_db_value,
     status_update_poller,
