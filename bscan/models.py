@@ -3,6 +3,7 @@
 from collections import namedtuple
 from typing import List
 
+from bscan.io import file_exists
 from bscan.runtime import get_db_value
 from bscan.structure import get_scan_file
 
@@ -39,16 +40,34 @@ class DetectedService(_DetectedService):
 
     def _fill_template(self, scan_name, cmd) -> List[str]:
         """Replace template parameters with values."""
-        fout = get_scan_file(self.target, self.name + '.' + scan_name)
         cmd = (cmd.replace('<target>', self.target)
-                  .replace('<fout>', fout)
                   .replace('<wordlist>', get_db_value('web-word-list'))
                   .replace('<userlist>', get_db_value('brute-user-list'))
                   .replace('<passlist>', get_db_value('brute-pass-list')))
 
         if '<ports>' in cmd:
-            return [cmd.replace('<ports>', self.port_str())]
+            fout = get_scan_file(
+                self.target,
+                self.name + '.' + '.'.join([str(p) for p in self.ports]) +
+                '.' + scan_name)
+            return [cmd.replace('<ports>', self.port_str())
+                       .replace('<fout>', fout)]
         elif '<port>' in cmd:
-            return [cmd.replace('<port>', str(p)) for p in self.ports]
+            cmds = []
+            for port in self.ports:
+                fout = get_scan_file(self.name + '.' + str(port) + '.' +
+                                     scan_name)
+                cmds.append(
+                    cmd.replace('<port>', str(port)).replace('<fout>', fout))
+            return cmds
         else:
+            fout = get_scan_file(self.name + '.' + scan_name)
+            # handling edge-case where a qs-spawned non-port scan could be
+            # overwritten by a ts-spawned non-port scan of the same service
+            i = 0
+            while file_exists(fout):
+                fout = get_scan_file(
+                    self.name + '.' + str(i) + '.' + scan_name)
+                i += 1
+            cmd = cmd.replace('<fout>', fout)
             return [cmd]
