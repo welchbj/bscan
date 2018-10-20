@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="350" height="200" src="https://raw.githubusercontent.com/welchbj/bscan/master/static/logo.png" alt="bscan">
+  <img width="350" height="200" src="static/logo.png" alt="bscan">
 </p>
 <p align="center">
   :mag: <em>an asynchronous target enumeration tool</em> :mag_right:
@@ -19,8 +19,8 @@
   </a>
 </p>
 <p align="center">
-  <a href="https://asciinema.org/a/205992?autoplay=1&speed=3">
-    <img src="https://asciinema.org/a/205992.png" width="750"/>
+  <a href="https://asciinema.org/a/207654?autoplay=1&speed=2">
+    <img src="https://asciinema.org/a/207654.png" width="750"/>
   </a>
 </p>
 
