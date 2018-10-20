@@ -110,6 +110,10 @@ optional arguments:
   --brute-user-list F   filename of user list to use for brute-forcing
   --cmd-print-width I   the maximum integer number of characters allowed when printing
                         the command used to spawn a running subprocess (defaults to 80)
+  --config-dir D        the base directory from which to load the configuration files;
+                        required configuration files missing from this directory will
+                        instead be loaded from the default files shipped with this
+                        program
   --hard                force overwrite of existing directories
   --max-concurrency I   maximum integer number of subprocesses permitted to be running
                         concurrently (defaults to 20)

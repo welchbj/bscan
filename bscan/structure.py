@@ -3,13 +3,14 @@
 import os
 
 from bscan.errors import BscanForceSkipTarget
-from bscan.io import (
-    create_dir,
-    path_exists,
+from bscan.io_console import (
     print_i_d1,
     print_i_d2,
     print_i_d3,
-    print_w_d1,
+    print_w_d1)
+from bscan.io_files import (
+    create_dir,
+    path_exists,
     remove_dir,
     touch_file)
 from bscan.runtime import get_db_value

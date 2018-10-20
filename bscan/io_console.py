@@ -1,12 +1,9 @@
-"""Utilities for file and terminal I/O."""
-
-import shutil
+"""Utilities for console I/O."""
 
 from colorama import (
     Fore,
     Style)
 from functools import partial
-from pathlib import Path
 
 
 def red(s: str) -> str:
@@ -51,33 +48,3 @@ print_e_d3 = partial(print, red('    [E] '), sep='')
 def print_color_info():
     print_i_d1('Colors: ', blue('info'), ', ', yellow('warnings'), ', ',
                red('errors'), ', and ', purple('pattern matches'), sep='')
-
-
-def path_exists(path: str) -> bool:
-    """Return whether the specified path leads to a file or directory."""
-    return Path(path).exists()
-
-
-def dir_exists(path: str) -> bool:
-    """Return whether the specified path leads to a directory."""
-    return Path(path).is_dir()
-
-
-def file_exists(path: str) -> bool:
-    """Return whether the specified path leads to a file."""
-    return Path(path).is_file()
-
-
-def remove_dir(path: str) -> None:
-    """Remove a directory tree, failing silently if ``path`` does not exist."""
-    shutil.rmtree(path, ignore_errors=True)
-
-
-def create_dir(path: str) -> None:
-    """Create a directory."""
-    Path(path).mkdir()
-
-
-def touch_file(path: str) -> None:
-    """Touch a file."""
-    Path(path).touch()

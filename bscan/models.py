@@ -3,7 +3,7 @@
 from collections import namedtuple
 from typing import List
 
-from bscan.io import file_exists
+from bscan.io_files import file_exists
 from bscan.runtime import get_db_value
 from bscan.structure import get_scan_file
 
@@ -55,18 +55,20 @@ class DetectedService(_DetectedService):
         elif '<port>' in cmd:
             cmds = []
             for port in self.ports:
-                fout = get_scan_file(self.name + '.' + str(port) + '.' +
-                                     scan_name)
+                fout = get_scan_file(
+                    self.target,
+                    self.name + '.' + str(port) + '.' + scan_name)
                 cmds.append(
                     cmd.replace('<port>', str(port)).replace('<fout>', fout))
             return cmds
         else:
-            fout = get_scan_file(self.name + '.' + scan_name)
+            fout = get_scan_file(self.target, self.name + '.' + scan_name)
             # handling edge-case where a qs-spawned non-port scan could be
             # overwritten by a ts-spawned non-port scan of the same service
             i = 0
             while file_exists(fout):
                 fout = get_scan_file(
+                    self.target,
                     self.name + '.' + str(i) + '.' + scan_name)
                 i += 1
             cmd = cmd.replace('<fout>', fout)

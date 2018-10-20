@@ -10,7 +10,7 @@ from typing import (
     List,
     Optional)
 
-from bscan.runtime import DEFAULT_WORDLIST_SEARCH_DIRS
+from bscan.config import DEFAULT_WORDLIST_SEARCH_DIRS
 from bscan.version import __version__
 from bscan.wordlists import (
     find_wordlist,

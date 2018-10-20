@@ -13,6 +13,10 @@ from typing import (
     List,
     Optional)
 
+from bscan.config import (
+    init_config,
+    good_py_version,
+    py_version_str)
 from bscan.errors import (
     BscanConfigError,
     BscanError,
@@ -20,7 +24,7 @@ from bscan.errors import (
     BscanForceSilentExit,
     BscanInternalError,
     BscanSubprocessError)
-from bscan.io import (
+from bscan.io_console import (
     print_color_info,
     print_e_d1,
     print_i_d1,
@@ -32,11 +36,9 @@ from bscan.networks import (
 from bscan.scans import scan_target
 from bscan.structure import create_dir_skeleton
 from bscan.runtime import (
-    init_db,
     get_db_value,
-    good_py_version,
-    py_version_str,
-    status_update_poller)
+    status_update_poller,
+    write_db_value)
 from bscan.version import __version__
 
 
@@ -77,6 +79,15 @@ def get_parsed_args(args: Optional[List[str]]=None) -> Namespace:
         metavar='I',
         help='the maximum integer number of characters allowed when printing\n'
              'the command used to spawn a running subprocess (defaults to 80)')
+
+    parser.add_argument(
+        '--config-dir',
+        action='store',
+        metavar='D',
+        help='the base directory from which to load the configuration files;\n'
+             'required configuration files missing from this directory will\n'
+             'instead be loaded from the default files shipped with this\n'
+             'program')
 
     parser.add_argument(
         '--hard',
@@ -225,7 +236,8 @@ async def main(args: Optional[List[str]]=None) -> int:
                 'received: ' + str(mc))
 
         async with Sublemon(max_concurrency=mc) as subl:
-            await init_db(opts, subl)
+            await write_db_value('sublemon', subl)
+            await init_config(opts)
 
             print_color_info()
 
