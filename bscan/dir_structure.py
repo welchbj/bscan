@@ -45,11 +45,6 @@ def get_local_txt_file(target: str) -> str:
     return os.path.join(get_loot_dir(target), 'local.txt')
 
 
-def get_bscan_summary_file(target: str) -> str:
-    """Get path to the summary file for the entire scan."""
-    return os.path.join(get_base_dir(target), 'summary.bscan')
-
-
 def get_scan_file(target: str, scan_name: str) -> str:
     """Get path to a file for service scan output."""
     return os.path.join(get_services_dir(target), scan_name)
