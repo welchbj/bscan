@@ -11,3 +11,4 @@ bscan.egg-info/
 build
 dist
 todo.txt
+test.py
