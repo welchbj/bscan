@@ -255,8 +255,14 @@ async def main(args: Optional[List[str]]=None) -> int:
             # TODO: create a full list of targets from network address and
             #       --ping-sweep filtering
             targets = []
+            _target_set = set()
             for candidate in opts.targets:
-                if is_valid_ip_host_addr(candidate):
+                if candidate in _target_set:
+                    print_w_d1(
+                        'Target ', candidate, ' has already been added as a '
+                        'target; skipping another attempted addition')
+                    continue
+                elif is_valid_ip_host_addr(candidate):
                     pass
                 elif is_valid_hostname(candidate):
                     pass
@@ -277,6 +283,7 @@ async def main(args: Optional[List[str]]=None) -> int:
                     continue
 
                 targets.append(candidate)
+                _target_set.add(candidate)
 
             if not targets:
                 print_e_d1('No valid targets specified')
