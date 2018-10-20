@@ -11,7 +11,8 @@ from colorama import init as init_colorama
 from sublemon import Sublemon
 from typing import (
     List,
-    Optional)
+    Optional,
+    Set)
 
 from bscan.config import (
     init_config,
@@ -255,7 +256,7 @@ async def main(args: Optional[List[str]]=None) -> int:
             # TODO: create a full list of targets from network address and
             #       --ping-sweep filtering
             targets = []
-            _target_set = set()
+            _target_set: Set[str] = set()
             for candidate in opts.targets:
                 if candidate in _target_set:
                     print_w_d1(
