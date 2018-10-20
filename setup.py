@@ -30,7 +30,8 @@ setup(
     entry_points={
         'console_scripts': [
             'bscan = bscan.__main__:main',
-            'bscan-wordlists = bscan.__main__:wordlists_main'
+            'bscan-wordlists = bscan.__main__:wordlists_main',
+            'bscan-shells = bscan.__main__:shells_main'
         ]
     },
     classifiers=[

