@@ -116,6 +116,12 @@ def get_parsed_args(args: Optional[List[str]]=None) -> Namespace:
              'wordlists')
 
     parser.add_argument(
+        '--no-service-scans',
+        action='store_true',
+        default=False,
+        help='disable running scans on discovered services')
+
+    parser.add_argument(
         '--output-dir',
         action='store',
         metavar='D',

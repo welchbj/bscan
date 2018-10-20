@@ -120,6 +120,7 @@ optional arguments:
   --no-program-check    disable checking the presence of required system programs
   --no-file-check       disable checking the presence of files such as configured
                         wordlists
+  --no-service-scans    disable running scans on discovered services
   --output-dir D        the base directory in which to write output files
   --patterns [ [ ...]]  regex patterns to highlight in output text
   --ping-sweep          enable ping sweep filtering of hosts from a network range
