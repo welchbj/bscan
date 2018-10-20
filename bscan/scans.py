@@ -15,7 +15,7 @@ from typing import (
     Set,
     Tuple)
 
-from bscan.io import (
+from bscan.io_console import (
     blue,
     print_i_d2,
     print_i_d3,
