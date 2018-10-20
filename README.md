@@ -157,24 +157,31 @@ optional arguments:
 ```
 
 
-## Packaging Releases
+## Development
 
-Install the development requirements:
+Start by setting up a new development environment and installing the requirements (using [`virtualenvwrapper`](https://pypi.org/project/virtualenvwrapper/) / [`virtualenvwrapper-win`](https://pypi.org/project/virtualenvwrapper-win/)):
 ```sh
+# setup the environment
+mkvirtualenv -p $(which python3) bscan-dev
+workon bscan-dev
+
+# get the deps
 pip install -r dev-requirements.txt
 ```
 
-Build the source and wheel distributions:
+Lint and type-check the project (these are run on [Travis](./.travis.yml), too):
 ```sh
+flake8 . && mypy bscan
+```
+
+When it's time to package a new release:
+```sh
+# build source and wheel distributions
 python setup.py bdist_wheel sdist
-```
 
-Run post-build checks:
-```sh
+# run post-build checks
 twine check dist/*
-```
 
-Upload to PyPI:
-```sh
+# upload to PyPI
 twine upload dist/*
 ```
