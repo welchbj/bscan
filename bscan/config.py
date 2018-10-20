@@ -148,6 +148,9 @@ async def init_config(ns: Namespace) -> None:
                     'required programs ' + ', '.join(not_found_progs) +
                     ' could not be found on this system')
 
+        # --no-service-scans
+        db['no-service-scans'] = ns.no_service_scans
+
         # load service information from `configuration/service-scans.toml`
         db['services'] = toml.loads(
             load_config_file('service-scans.toml', ns.config_dir))

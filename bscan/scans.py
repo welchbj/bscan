@@ -37,7 +37,8 @@ from bscan.runtime import (
 
 async def scan_target(target: str) -> None:
     """Run quick, thorough, and service scans on a target."""
-    do_thorough = not get_db_value('quick-only')
+    do_ts = not get_db_value('quick-only')
+    do_s_scans = not get_db_value('no-service-scans')
     await add_active_target(target)
 
     # block on the initial quick scan
@@ -48,14 +49,17 @@ async def scan_target(target: str) -> None:
     _print_unmatched_services(target, qs_unmatched_services)
 
     # schedule service scans based on qs-found ports
-    qs_s_scan_cmds: List[List[str]] = \
-        [js.build_scans() for js in qs_joined_services]
-    qs_s_scans: List[Coroutine[Any, Any, Any]] = \
-        [run_service_s(target, cmd) for cmd in chain(*qs_s_scan_cmds)]
-    qs_s_scan_tasks = [ensure_future(scan) for scan in qs_s_scans]
+    if do_s_scans:
+        qs_s_scan_cmds: List[List[str]] = \
+            [js.build_scans() for js in qs_joined_services]
+        qs_s_scans: List[Coroutine[Any, Any, Any]] = \
+            [run_service_s(target, cmd) for cmd in chain(*qs_s_scan_cmds)]
+        qs_s_scan_tasks = [ensure_future(scan) for scan in qs_s_scans]
+    else:
+        qs_s_scan_tasks = []
 
     # block on the thorough scan, if enabled
-    if do_thorough:
+    if do_ts:
         ts_parsed_services: Set[ParsedService] = await run_ts(target)
     else:
         ts_parsed_services = set()
@@ -64,7 +68,7 @@ async def scan_target(target: str) -> None:
     # diff open ports between quick and thorough scans
     new_services: Set[ParsedService] = ts_parsed_services - qs_parsed_services
     ts_joined_services: List[DetectedService] = []
-    if new_services:
+    if new_services and do_s_scans:
         ts_unmatched_services, ts_joined_services = \
             join_services(target, new_services)
         _print_matched_services(target, ts_joined_services)
@@ -73,9 +77,11 @@ async def scan_target(target: str) -> None:
         ts_s_scans = [run_service_s(target, cmd) for
                       cmd in chain(*ts_s_scan_cmds)]
         ts_s_scan_tasks = [ensure_future(scan) for scan in ts_s_scans]
-    elif do_thorough:
+    elif do_ts:
         print_i_d2(target, ': thorough scan discovered no additional '
                    'services')
+        ts_s_scan_tasks = []
+    else:
         ts_s_scan_tasks = []
 
     # write recommendations file for further manual TCP commands
