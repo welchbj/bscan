@@ -42,7 +42,7 @@ def py_version_str() -> str:
     return str(sys.version_info.major) + '.' + str(sys.version_info.minor)
 
 
-def _load_default_config_file(filename: str) -> str:
+def load_default_config_file(filename: str) -> str:
     """Packaged-friendly method to load contents of a default config file."""
     try:
         raw_contents = resource_string(__name__, 'configuration/' + filename)
@@ -55,11 +55,11 @@ def _load_default_config_file(filename: str) -> str:
 def load_config_file(filename: str, base_dir: Optional[str]=None) -> str:
     """Load config file from specified base_dir, falling back on defaults."""
     if base_dir is None:
-        return _load_default_config_file(filename)
+        return load_default_config_file(filename)
     elif not dir_exists(base_dir):
         print_w_d2('Specified `--output-dir` ', base_dir, ' does not exist, '
                    'falling back to default configuration file for ', filename)
-        return _load_default_config_file(filename)
+        return load_default_config_file(filename)
 
     path = os.path.join(base_dir, filename)
     if file_exists(path):
@@ -69,7 +69,7 @@ def load_config_file(filename: str, base_dir: Optional[str]=None) -> str:
         print_w_d2('File ', filename, ' not found in specified `--output-dir`'
                    ', falling back to default configuration file for ',
                    filename)
-        return _load_default_config_file(filename)
+        return load_default_config_file(filename)
 
 
 async def init_config(ns: Namespace) -> None:
