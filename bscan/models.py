@@ -5,7 +5,7 @@ from typing import List
 
 from bscan.io_files import file_exists
 from bscan.runtime import get_db_value
-from bscan.structure import get_scan_file
+from bscan.dir_structure import get_scan_file
 
 ParsedService = namedtuple(
     'ParsedService',

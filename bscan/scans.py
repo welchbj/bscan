@@ -15,6 +15,9 @@ from typing import (
     Set,
     Tuple)
 
+from bscan.dir_structure import (
+    get_recommendations_txt_file,
+    get_scan_file)
 from bscan.io_console import (
     blue,
     print_i_d2,
@@ -30,9 +33,6 @@ from bscan.runtime import (
     get_db_value,
     proc_spawn,
     remove_active_target)
-from bscan.structure import (
-    get_recommendations_txt_file,
-    get_scan_file)
 
 
 async def scan_target(target: str) -> None:
