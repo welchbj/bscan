@@ -40,5 +40,5 @@
   default = 'nmap'
 
   [udp.nmap]
-    scan = 'nmap -vv -Pn -sC -sV sU {target} -oN "{fout}" 2>&1'
+    scan = 'nmap -vv -Pn -sU {target} -oN "{fout}" 2>&1'
     pattern = '^(?P<port>\d+)/udp(.*)open(\s*)(?P<name>[\w-]+)(\s*)(.*)$'
