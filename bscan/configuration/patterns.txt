@@ -6,3 +6,5 @@
 (?i)phpliteadmin
 (?i)wordpress
 wp
+(?i)heartbleed
+(?i)shellshock
