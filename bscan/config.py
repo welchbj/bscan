@@ -45,11 +45,21 @@ def py_version_str() -> str:
 def load_default_config_file(filename: str) -> str:
     """Packaged-friendly method to load contents of a default config file."""
     try:
-        raw_contents = resource_string(__name__, 'configuration/' + filename)
+        pyinst_basedir = getattr(sys, '_MEIPASS', None)
+        if pyinst_basedir is not None:
+            # load configuration from PyInstaller bundle
+            filepath = os.path.join(pyinst_basedir, 'configuration', filename)
+            with open(filepath, 'r') as f:
+                raw_contents = f.read()
+        else:
+            # load configuration from either Python wheel or the filesystem
+            raw_contents = resource_string(
+                __name__, 'configuration/' + filename).decode('utf-8')
     except FileNotFoundError:
         raise BscanConfigError(
             'Unable to find default configuration file `' + filename + '`')
-    return raw_contents.decode('utf-8')
+
+    return raw_contents
 
 
 def load_config_file(filename: str, base_dir: Optional[str]=None) -> str:

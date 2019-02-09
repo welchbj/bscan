@@ -5,7 +5,6 @@ bscan.egg-info/
 *.bscan.d
 *.py[cod]
 *.egg
-*.spec
 
 .tox
 .vscode
