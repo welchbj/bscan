@@ -1,0 +1,52 @@
+strategy:
+  matrix:
+    linux:
+      imageName: 'ubuntu-16.04'
+    mac:
+      imageName: 'macos-10.13'
+    windows:
+      imageName: 'vs2017-win2016'
+
+pool:
+  vmImage: $(imageName)
+
+steps:
+- script: |
+    python --version
+    pip --version
+  displayName: 'Check environment'
+
+- script: |
+    pip install -rdev-requirements.txt
+    flake8 --version
+    mypy --version
+    pyinstaller --version
+  displayName: 'Install dependencies'
+
+- script: |
+    flake8 .
+    mypy bscan
+  displayName: 'Linting'
+
+- script: |
+    python setup.py install
+    bscan --version
+    bscan-wordlists --version
+    bscan-shells --version
+    pip uninstall -y bscan
+  displayName: 'Test install'
+
+- script: |
+    pyinstaller --onefile --name bscan bscan/__main__.py
+  displayName: 'Build standalone executable'
+
+# the below task implicitly depends on tagged commits
+- task: GitHubRelease@0
+  displayName: 'Publish GitHub release'
+  inputs:
+    gitHubConnection: welchbj
+    repositoryName: welchbj/bscan
+    action: 'create'
+    target: '$(Build.SourceVersion)'
+    title: 'bscan $(tagName)'
+    assets: '$(Build.ArtifactStagingDirectory)/bscan*'
