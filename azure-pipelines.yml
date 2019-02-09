@@ -14,7 +14,7 @@ steps:
 - script: |
     python --version
     pip --version
-  dispalyName: 'Check environment'
+  displayName: 'Check environment'
 
 - script: |
     pip install -rdev-requirements.txt
