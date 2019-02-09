@@ -33,7 +33,6 @@ steps:
     bscan --version
     bscan-wordlists --version
     bscan-shells --version
-    pip uninstall -y bscan
   displayName: 'Test install'
 
 - script: |
