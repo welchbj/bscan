@@ -180,6 +180,9 @@ flake8 . && mypy bscan
 
 When it's time to package a new release:
 ```sh
+# build the single-file executable
+pyinstaller bscan.spec
+
 # build source and wheel distributions
 python setup.py bdist_wheel sdist
 
