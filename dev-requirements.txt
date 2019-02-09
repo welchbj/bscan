@@ -1,4 +1,5 @@
 aiostream==0.3.1
+altgraph==0.16.1
 bleach==3.0.1
 certifi==2018.8.24
 cffi==1.11.5
@@ -9,14 +10,18 @@ docutils==0.14
 flake8==3.5.0
 future==0.16.0
 idna==2.7
+macholib==1.11
 mccabe==0.6.1
 mypy==0.630
 mypy-extensions==0.4.1
+pefile==2018.8.8
 pkginfo==1.4.2
 pycodestyle==2.3.1
 pycparser==2.19
 pyflakes==1.6.0
 Pygments==2.2.0
+PyInstaller==3.4
+pywin32-ctypes==0.2.0
 readme-renderer==22.0
 requests==2.20.0
 requests-toolbelt==0.8.0
