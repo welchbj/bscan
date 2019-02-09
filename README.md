@@ -38,14 +38,26 @@
 
 ## Installation
 
-`bscan` was written to be run on [Kali Linux](https://www.kali.org/), but there is nothing inherently preventing it from running on any OS with the appropriate tools installed.
+`bscan` was written to be run on [Kali Linux](https://www.kali.org/), but there is nothing inherently preventing it from running on any OS with the appropriate tools installed. There's a few different types of packaged releases and ways to install them.
 
-Download the latest packaged version from PyPI:
+The easiest way to get up and running is to install the appropriate single-file executable version of the program for your operating system (no Python installation required):
+```sh
+# on Linux (i.e., Kali)
+wget -O bscan https://releases.brianwel.ch/bscan/linux
+
+# on Windows
+powershell -c "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; wget 'https://releases.brianwel.ch/bscan/windows' -OutFile 'bscan.exe'"
+
+# to download a specific version, use the following pattern
+wget -O bscan https://releases.brianwel.ch/github/bscan/linux/0.1.4
+```
+
+You can also download the latest packaged version from PyPI (note that this requires an existing Python 3.6+ installation):
 ```sh
 pip install bscan
 ```
 
-Or get the bleeding-edge version from version control:
+Similarly, you could get the bleeding-edge version from version control:
 ```sh
 pip install https://github.com/welchbj/bscan/archive/master.tar.gz
 ```
