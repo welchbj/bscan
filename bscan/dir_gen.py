@@ -9,7 +9,8 @@ from bscan.dir_structure import (
     get_recommendations_txt_file,
     get_services_dir,
     get_sploits_dir)
-from bscan.errors import BscanForceSkipTarget
+from bscan.errors import (
+    BscanForceSkipTarget)
 from bscan.io_console import (
     print_i_d1,
     print_w_d2)
@@ -18,7 +19,8 @@ from bscan.io_files import (
     path_exists,
     remove_dir,
     touch_file)
-from bscan.runtime import get_db_value
+from bscan.runtime import (
+    get_db_value)
 
 
 def create_dir_skeleton(target: str) -> None:

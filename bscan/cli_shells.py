@@ -10,12 +10,15 @@ from typing import (
     List,
     Optional)
 
-from bscan.errors import BscanConfigError
+from bscan.errors import (
+    BscanConfigError)
 from bscan.networks import (
     is_valid_ip_host_addr,
     is_valid_hostname)
-from bscan.shells import reverse_shell_commands
-from bscan.version import __version__
+from bscan.shells import (
+    reverse_shell_commands)
+from bscan.version import (
+    __version__)
 
 
 def get_parsed_args(args: Optional[List[str]]=None) -> Namespace:

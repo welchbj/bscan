@@ -2,14 +2,17 @@
 
 import asyncio
 
-from asyncio import Lock
-from collections import namedtuple
+from asyncio import (
+    Lock)
+from collections import (
+    namedtuple)
 from typing import (
     Any,
     AsyncGenerator,
     Dict)
 
-from bscan.errors import BscanInternalError
+from bscan.errors import (
+    BscanInternalError)
 from bscan.io_console import (
     print_i_d2,
     print_i_d3,

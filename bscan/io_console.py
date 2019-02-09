@@ -3,7 +3,8 @@
 from colorama import (
     Fore,
     Style)
-from functools import partial
+from functools import (
+    partial)
 
 
 def red(s: str) -> str:

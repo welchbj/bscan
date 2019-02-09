@@ -4,9 +4,12 @@ import sys
 
 from sublemon import crossplat_loop_run
 
-from bscan.cli import main as cli_main
-from bscan.cli_wordlists import main as cli_wordlists_main
-from bscan.cli_shells import main as cli_shells_main
+from bscan.cli import (
+    main as cli_main)
+from bscan.cli_wordlists import (
+    main as cli_wordlists_main)
+from bscan.cli_shells import (
+    main as cli_shells_main)
 
 
 def main():

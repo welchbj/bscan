@@ -5,8 +5,10 @@ import re
 from asyncio import (
     ensure_future,
     gather)
-from itertools import chain
-from functools import partial
+from itertools import (
+    chain)
+from functools import (
+    partial)
 from typing import (
     Any,
     Coroutine,

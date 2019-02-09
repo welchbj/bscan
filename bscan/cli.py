@@ -7,8 +7,10 @@ from argparse import (
     ArgumentParser,
     Namespace,
     RawTextHelpFormatter)
-from colorama import init as init_colorama
-from sublemon import Sublemon
+from colorama import (
+    init as init_colorama)
+from sublemon import (
+    Sublemon)
 from typing import (
     List,
     Optional,
@@ -18,7 +20,8 @@ from bscan.config import (
     init_config,
     good_py_version,
     py_version_str)
-from bscan.dir_gen import create_dir_skeleton
+from bscan.dir_gen import (
+    create_dir_skeleton)
 from bscan.errors import (
     BscanConfigError,
     BscanError,
@@ -35,12 +38,14 @@ from bscan.networks import (
     is_valid_hostname,
     is_valid_ip_host_addr,
     is_valid_ip_net_addr)
-from bscan.scans import scan_target
+from bscan.scans import (
+    scan_target)
 from bscan.runtime import (
     get_db_value,
     status_update_poller,
     write_db_value)
-from bscan.version import __version__
+from bscan.version import (
+    __version__)
 
 
 def get_parsed_args(args: Optional[List[str]]=None) -> Namespace:

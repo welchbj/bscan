@@ -2,7 +2,8 @@
 
 import os
 
-from bscan.runtime import get_db_value
+from bscan.runtime import (
+    get_db_value)
 
 
 def get_base_dir(target: str) -> str:

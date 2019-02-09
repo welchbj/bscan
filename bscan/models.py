@@ -1,11 +1,16 @@
 """Models for use in `bscan` operations."""
 
-from collections import namedtuple
-from typing import List
+from collections import (
+    namedtuple)
+from typing import (
+    List)
 
-from bscan.io_files import file_exists
-from bscan.runtime import get_db_value
-from bscan.dir_structure import get_scan_file
+from bscan.io_files import (
+    file_exists)
+from bscan.runtime import (
+    get_db_value)
+from bscan.dir_structure import (
+    get_scan_file)
 
 ParsedService = namedtuple(
     'ParsedService',

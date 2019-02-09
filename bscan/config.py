@@ -6,14 +6,19 @@ import shutil
 import sys
 import toml
 
-from argparse import Namespace
-from collections import namedtuple
-from pkg_resources import resource_string
+from argparse import (
+    Namespace)
+from collections import (
+    namedtuple)
+from pkg_resources import (
+    resource_string)
 from typing import (
     Optional)
 
-from bscan.errors import BscanConfigError
-from bscan.io_console import print_w_d2
+from bscan.errors import (
+    BscanConfigError)
+from bscan.io_console import (
+    print_w_d2)
 from bscan.io_files import (
     dir_exists,
     file_exists)

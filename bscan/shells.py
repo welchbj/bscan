@@ -2,9 +2,12 @@
 
 import toml
 
-from collections import namedtuple
-from typing import List
-from urllib.parse import quote_plus
+from collections import (
+    namedtuple)
+from typing import (
+    List)
+from urllib.parse import (
+    quote_plus)
 
 from bscan.config import load_default_config_file
 
