@@ -147,7 +147,7 @@ optional arguments:
 
 ## Companion Tools
 
-The main `bscan` program ships with two utility programs (`bscan-wordlists` and `bscan-shells`) to make your life a little easier when looking for wordlists and trying to open reverse shells.
+The main `bscan` program ships with two utility programs (`bscan-wordlists` and `bscan-shells`) to make your life a little easier when looking for wordlists and trying to open reverse shells. It should be noted that these companion tools are only available when installing via `pip`.
 
 `bscan-wordlists` is a program designed for finding wordlist files on Kali Linux. It searches a few default directories and allows for glob filename matching. Here's a simple example:
 ```sh
