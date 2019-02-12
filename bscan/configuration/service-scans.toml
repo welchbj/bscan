@@ -223,6 +223,7 @@
     nmap = "nmap -vv -Pn -p <ports> --script=snmp-netstat,snmp-processes <target> -oN <fout>"
     onesixtyone = "onesixtyone <target> 2>&1 | tee <fout>"
     snmpwalk = "snmpwalk -c public -v1 <target> 2>&1 | tee <fout>"
+    snmpcheck = "snmp-check -p <port> <target> 2>&1 | tee <fout>"
 
 
 [ldap]  # 389
