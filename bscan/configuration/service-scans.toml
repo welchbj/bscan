@@ -26,7 +26,7 @@
   ]
 
   recommendations = [
-    # none
+    "nc <target> <port>"
   ]
 
   [ssh.scans]
