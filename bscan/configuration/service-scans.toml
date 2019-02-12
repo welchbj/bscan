@@ -108,7 +108,7 @@
   [http.scans]
     nikto = "nikto -host <target> -port <ports> 2>&1 | tee <fout>"
     nmap = "nmap -vv -Pn -p <ports> --script=http-vuln* <target> -oN <fout>"
-    gobuster = "gobuster -e -w <wordlist> -u http://<target>:<port>/ 2>&1 | tee <fout>"
+    gobuster = "gobuster -e -w <wordlist> -s 200,204,301,307,403,500 -u http://<target>:<port>/ 2>&1 | tee <fout>"
 
 
 [kerberos]
