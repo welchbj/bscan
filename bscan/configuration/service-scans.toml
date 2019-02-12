@@ -269,6 +269,19 @@
     nmap = "nmap -vv -Pn -p <ports> --script=rmi-vuln-classloader,rmi-dumpregistry <target> -oN <fout>"
 
 
+[socks]  # 1080
+  nmap-service-names = [
+    "socks"
+  ]
+
+  recommendations = [
+    # none
+  ]
+
+  [socks.scans]
+    nmap = "nmap -vv -Pn -p <ports> --script=socks-auth-info,socks-open-proxy <target> -oN <fout>"
+
+
 [mssql]  # 1433, 1434
   nmap-service-names = [
     "ms-sql",
