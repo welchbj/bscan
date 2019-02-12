@@ -227,15 +227,19 @@
 
 [ldap]  # 389
   nmap-service-names = [
-    "ldap"
+    "ldap",
+    "ldapssl"
   ]
 
   recommendations = [
-    # none
+    "nmap -vv -Pn -p <ports> --script ldap-brute --script-args ldap.base='\"dc=example,dc=com\"' <target>",
+    "nmap -vv -Pn -p <ports> --script ldap-search --script-args 'ldap.username=\"cn=ldaptest,cn=users,dc=cqure,dc=net\",ldap.password=ldaptest,ldap.qfilter=users,ldap.attrib=sAMAccountName' <target>"
   ]
 
   [ldap.scans]
+    nmap = "nmap -vv -Pn -p <ports> --script ldap-rootdse <target> -oN <fout>"
     enum4linux = "enum4linux -l <target> 2>&1 | tee <fout>"
+    ldapsearch = "ldapsearch -v -D \"cn=directory manager\" -w secret -p <port> -h <target> -b \"\" -s base \"objectclass=*\" 2>&1 | tee <fout>"
 
 
 [cups]
