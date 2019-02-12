@@ -24,6 +24,7 @@ from bscan.io_console import (
     blue,
     print_i_d2,
     print_i_d3,
+    print_p_d3,
     print_w_d3,
     purple,
     yellow)
@@ -201,7 +202,7 @@ def highlight_patterns(target: str, line: str) -> None:
 
     if did_match:
         highlighted_line += line[pos:]
-        print_i_d3(
+        print_p_d3(
             target, ': matched pattern in line `', highlighted_line, '`')
 
 
