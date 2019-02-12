@@ -72,7 +72,7 @@
   [dns.scans]
     dnsrecon = "dnsrecon -t axfr <target> 2>&1 | tee <fout>"
     host = "host -t ns <target> 2>&1 | tee <fout>"
-    nmap = "nmap -v -Pn -p <ports> --script=dns-service-discovery,dns-cache-snoop,dns-check-zone,dns-zone-transfer <target> -oN <fout>"
+    nmap = "nmap -vv -Pn -p <ports> --script=dns-service-discovery,dns-cache-snoop,dns-check-zone,dns-zone-transfer <target> -oN <fout>"
 
 
 [tftp]  # 69
