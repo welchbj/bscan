@@ -122,7 +122,7 @@ async def run_qs(target: str) -> Set[ParsedService]:
     qs_config = get_db_value('quick-scan')
     cmd = qs_config.scan.format(
         target=target,
-        fout=get_scan_file(target, 'tcp.quickscan.' + qs_config.name))
+        fout=get_scan_file(target, 'tcp.quick.' + qs_config.name))
     services = await _parse_port_scan(target, cmd, qs_config.pattern)
     print_i_d2(target, ': finished TCP quick scan')
     return services
