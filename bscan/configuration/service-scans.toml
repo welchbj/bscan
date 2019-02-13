@@ -171,7 +171,8 @@
     "crackmapexec smb <target> -u '' -p ''",
     "crackmapexec smb <target> -u '' -p '' --local-auth",
     "smbclient -L <target>",
-    "smbclient \\\\<target>\\<share>"
+    "smbclient \\\\<target>\\<share>",
+    "smbmap -H <target> -u <user> -p <pass> -s <share> -d <domain> -P <port> -R"
   ]
 
   [smb.scans]
