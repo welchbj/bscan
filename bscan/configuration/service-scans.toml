@@ -102,13 +102,17 @@
     "wafw00f http://<target>:/<port>/",
     "nmap -Pn -p <ports> --script http-adobe-coldfusion-apsa1301,http-coldfusion-subzero,http-vuln-cve2009-3960,http-vuln-cve2010-2861 <target> -oN <fout>",
     "wpscan --url http://<target>:<port>/",
-    "wpscan --url http://<target>:<port>/ --enumerate vp"
+    "wpscan --url http://<target>:<port>/ --enumerate vp",
+    "joomscan --url http://<target>:<port>/ --enumerate-components",
+    "davtest -url http://<target>:<port>/",
+    "cewl http://<target>:<port>/ -m 6,\"http,https,ssl,soap,http-proxy,http-alt\""
   ]
 
   [http.scans]
     nikto = "nikto -host <target> -port <ports> 2>&1 | tee <fout>"
     nmap = "nmap -vv -Pn -p <ports> --script=http-vuln* <target> -oN <fout>"
     gobuster = "gobuster -e -w <wordlist> -s 200,204,301,307,403,500 -u http://<target>:<port>/ 2>&1 | tee <fout>"
+    uniscan = "uniscan -u http://<target>:<port>/ -qweds 2>&1 | tee <fout>"
 
 
 [kerberos]
