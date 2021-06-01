@@ -31,5 +31,5 @@ toml==0.9.6
 tqdm==4.26.0
 twine==1.12.1
 typed-ast==1.1.0
-urllib3==1.23
+urllib3==1.26.5
 webencodings==0.5.1
